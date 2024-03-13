@@ -1,1 +1,5 @@
 rootProject.name = 'TFinder'
+include 'infrastructure'
+include 'domain'
+include 'common'
+
