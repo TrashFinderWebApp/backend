@@ -1,1 +1,6 @@
 rootProject.name = 'TFinder'
+include 'server-infrastructure'
+include 'server-domain'
+include 'server-global-utils'
+include 'server-api'
+
