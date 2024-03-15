@@ -1,4 +1,4 @@
-package org.example.member.type;
+package org.example.user.type;
 
 import lombok.Getter;
 

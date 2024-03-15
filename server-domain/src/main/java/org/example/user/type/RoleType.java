@@ -1,4 +1,4 @@
-package org.example.member.type;
+package org.example.user.type;
 
 public enum RoleType {
     ROLE_GUEST("비회원"), ROLE_MEMBER("회원");
