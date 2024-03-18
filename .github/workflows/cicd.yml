@@ -61,7 +61,7 @@ jobs:
           username: ${{ secrets.GCE_USERNAME }}
           key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
           script: | 
-            docker login ${{ secrets.GCP_PROJECT_ID }} -u _json_key -p "${{ secrets.GCP_SA_KEY }}"
+            docker login ${{ secrets.GCP_ARTIFACT_REGISTRY }}
             docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
             docker stop $(docker ps -q --filter ancestor=${{ secrets.GCP_ARTIFACT_REGISTRY }}:${{ github.sha }}) || true
             docker run -d --rm -p 80:80 ${{ secrets.GCP_ARTIFACT_REGISTRY }}:${{ github.sha }}
