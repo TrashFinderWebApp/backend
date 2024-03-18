@@ -49,7 +49,7 @@ jobs:
           docker push ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
 
       - name: Deploy to GCE instance
-        uses: appleboy/ssh-action@v1
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.GCE_HOST }}
           username: ${{ secrets.GCE_USERNAME }}
