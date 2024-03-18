@@ -53,7 +53,6 @@ jobs:
           docker build -t ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} .
           docker push ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
 
-
       - name: Deploy to GCE instance
         uses: appleboy/ssh-action@master
         with:
