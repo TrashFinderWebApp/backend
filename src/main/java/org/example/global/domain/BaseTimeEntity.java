@@ -1,4 +1,4 @@
-package org.example.domain.user.domain;
+package org.example.global.domain;
 
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;

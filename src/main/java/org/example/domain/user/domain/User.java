@@ -13,13 +13,14 @@ import lombok.Builder;
 import lombok.Getter;
 import org.example.domain.user.type.AuthType;
 import org.example.domain.user.type.RoleType;
+import org.example.global.domain.BaseTimeEntity;
 
 @Entity
 @Builder
 @Getter
 @AllArgsConstructor
 @Table(name = "user")
-public class User extends BaseTimeEntity{
+public class User extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
