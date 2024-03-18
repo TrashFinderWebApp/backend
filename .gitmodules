@@ -1,0 +1,3 @@
+[submodule "backend_env"]
+	path = backend_env
+	url = https://github.com/TrashFinderWebApp/backend_env.git
