@@ -54,10 +54,12 @@ jobs:
           docker build -t ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} .
           docker push ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
 
-      - name: Deploy to GCE
-        run: |
-          gcloud compute ssh ${{ secrets.GCP_PROJECT_ID }} --zone asia-northeast3-a --command "\
-            docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} && \
-            docker stop tfinder-container || true && \
-            docker rm tfinder-container || true && \
-            docker run -d -p 80:80 --name tfinder-container ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}"
+      - name: Deploy to Google Compute Engine
+        uses: google-github-actions/deploy-compute-engine@v0.3.0
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          zone: 'asia-northeast3-a'
+          instance_name: 'tfinder-vm'
+          docker_image: '${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}'
+          docker_run_args: '--restart=always'
