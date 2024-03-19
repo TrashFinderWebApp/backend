@@ -46,21 +46,18 @@ jobs:
         with:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - run: gcloud auth configure-docker asia-northeast3-docker.pkg.dev
+      - name: Configure Docker
+        run: gcloud auth configure-docker asia-northeast3-docker.pkg.dev
 
       - name: Build and push Docker image to GCP Artifact Registry
         run: |
           docker build -t ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} .
           docker push ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
 
-      - name: Deploy to GCE instance
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.GCE_HOST }}
-          username: ${{ secrets.GCE_USERNAME }}
-          key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
-          script: | 
-            docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
-            docker stop tfinder || true
-            docker rm tfinder || true
-            docker run -d --name tfinder -p 80:80 asia-northeast3-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/tfinder/tfinder:${{ github.sha }}
+      - name: Deploy to GCE
+        run: |
+          gcloud compute ssh ${{ secrets.GCP_PROJECT_ID }} --zone asia-northeast3-a --command "\
+            docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} && \
+            docker stop tfinder-container || true && \
+            docker rm tfinder-container || true && \
+            docker run -d -p 80:80 --name tfinder-container ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}"
