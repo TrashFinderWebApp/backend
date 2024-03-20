@@ -63,6 +63,7 @@ jobs:
             gcloud auth list && \
             gcloud auth configure-docker asia-northeast3-docker.pkg.dev -q && \
             gcloud artifacts locations list && \
+            gcloud projects get-iam-policy ${{ secrets.GCP_PROJECT_ID }} && \
             sudo docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} && \
             sudo docker stop tfinder-container || true && \
             sudo docker rm tfinder-container || true && \
