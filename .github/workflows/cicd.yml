@@ -58,7 +58,7 @@ jobs:
         run: |
           gcloud compute ssh tfinder-vm --zone asia-northeast3-a --command="\
           echo '${{ secrets.GCP_SA_KEY }}' > gcp-key.json && \
-          gcloud auth activate-service-account --key-file=gcp-key.json&& \
+          gcloud auth activate-service-account --key-file=gcp-key.json && \
           gcloud auth list && \
           gcloud auth configure-docker asia-northeast3-docker.pkg.dev -q && \
           sudo docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} && \
