@@ -54,30 +54,27 @@ jobs:
           docker build -t ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} .
           docker push ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
 
-      - name: Connect to GCE instance and run commands
-        run: |
-          echo '${{ secrets.GCP_SA_KEY }}' > gcp-key.json
-          gcloud compute scp gcp-key.json tfinder-vm:~/ --zone asia-northeast3-a
-          gcloud compute ssh tfinder-vm --zone asia-northeast3-a --command="\
-            gcloud auth activate-service-account --key-file=gcp-key.json && \
-            gcloud auth list && \
-            gcloud auth configure-docker asia-northeast3-docker.pkg.dev -q && \
-            sudo docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} && \
-            sudo docker stop tfinder-container || true && \
-            sudo docker rm tfinder-container || true && \
-            sudo docker run -d --name tfinder-container -p 8080:8080 ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}"
-          rm gcp-key.json
+#      - name: Connect to GCE instance and run commands
+#        run: |
+#          echo '${{ secrets.GCP_SA_KEY }}' > gcp-key.json
+#          gcloud compute scp gcp-key.json tfinder-vm:~/ --zone asia-northeast3-a
+#          gcloud compute ssh tfinder-vm --zone asia-northeast3-a --command="\
+#            gcloud auth activate-service-account --key-file=gcp-key.json && \
+#            gcloud auth list && \
+#            gcloud auth configure-docker asia-northeast3-docker.pkg.dev -q && \
+#            sudo docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} && \
+#            sudo docker stop tfinder-container || true && \
+#            sudo docker rm tfinder-container || true && \
+#            sudo docker run -d --name tfinder-container -p 8080:8080 ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}"
+#          rm gcp-key.json
 
       - name: SSH and Deploy to GCE
         run: |
           # SSH 키를 사용하여 GCE 인스턴스에 접속
           ssh-keyscan -H 35.216.97.185 >> ~/.ssh/known_hosts
           ssh -i ${{ secrets.GCE_SSH_PRIVATE_KEY }} tfinder4321@35.216.97.185 << EOF
-            # Artifact Registry에서 Docker 이미지를 pull
             sudo docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
-            # 기존에 실행 중인 컨테이너가 있다면 중지 및 제거
             sudo docker stop tfinder-container || true
             sudo docker rm tfinder-container || true
-            # 새 Docker 이미지를 사용하여 컨테이너 실행
             sudo docker run -d --name tfinder-container -p 8080:8080 ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
           EOF
