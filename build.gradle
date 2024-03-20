@@ -19,6 +19,7 @@ configurations {
 
 repositories {
 	mavenCentral()
+	maven { url 'https://jitpack.io' }
 }
 
 dependencies {
@@ -32,12 +33,34 @@ dependencies {
 
 	/* jwt */
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+
+	implementation 'com.github.napstr:logback-discord-appender:1.0.0'
+
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testImplementation 'org.springframework.security:spring-security-test'
 }
+
+//processResources.dependsOn('copySecret')
+//processResources.dependsOn('copySecret2')
+//
+//tasks.register('copySecret', Copy) {
+//	from 'backend_env/application.yaml' // 서브모듈에 있는 환경변수 설정파일을 복사한다.
+//	into 'src/main/resources'
+//}
+//
+//tasks.register('copySecret2', Copy) {
+//	from 'backend_env/yaml/application-prod.yaml'
+//	into 'src/main/resources/yaml'
+//
+//	from 'backend_env/yaml/application-dev.yaml'
+//	into 'src/main/resources/yaml'
+//}
 
 tasks.named('test') {
 	useJUnitPlatform()
