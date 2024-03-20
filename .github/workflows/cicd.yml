@@ -70,7 +70,7 @@ jobs:
 
       - name: SSH and Deploy to GCE
         run: |
-          # SSH 키를 사용하여 GCE 인스턴스에 접속
+          mkdir -p ~/.ssh
           ssh-keyscan -H 35.216.97.185 >> ~/.ssh/known_hosts
           ssh -i ${{ secrets.GCE_SSH_PRIVATE_KEY }} tfinder4321@35.216.97.185 << EOF
             sudo docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
@@ -78,3 +78,4 @@ jobs:
             sudo docker rm tfinder-container || true
             sudo docker run -d --name tfinder-container -p 8080:8080 ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
           EOF
+      
