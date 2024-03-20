@@ -56,7 +56,7 @@ jobs:
 
       - name: Connect to GCE instance and run commands
         run: |
-          echo ${{ secrets.GCP_SA_KEY }} > gcp-key.json
+          echo '${{ secrets.GCP_SA_KEY }}' > gcp-key.json
           gcloud compute scp gcp-key.json tfinder-vm:~/ --zone asia-northeast3-a
           gcloud compute ssh tfinder-vm --zone asia-northeast3-a --command="\
             gcloud auth activate-service-account --key-file=gcp-key.json && \
