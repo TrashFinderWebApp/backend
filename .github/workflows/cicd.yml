@@ -54,10 +54,14 @@ jobs:
           docker build -t ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} .
           docker push ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
 
-      - name: Connect to GCE instance
-        run: |
-          gcloud compute ssh tfinder-vm --zone asia-northeast3-a --command="\
-          sudo docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} && \
-          sudo docker stop tfinder-container || true && \
-          sudo docker rm tfinder-container || true && \
-          sudo docker run -d --name tfinder-container -p 8080:8080 ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}"
+      - name: Deploy to GCE instance
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.GCE_HOST }}
+          username: ${{ secrets.GCE_USERNAME }}
+          key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
+          script: |
+            docker login ${{ secrets.GCP_ARTIFACT_REGISTRY }}
+            docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
+            docker stop $(docker ps -q --filter ancestor=${{ secrets.GCP_ARTIFACT_REGISTRY }}:${{ github.sha }}) || true
+            docker run -d --rm -p 80:80 ${{ secrets.GCP_ARTIFACT_REGISTRY }}:${{ github.sha }}
