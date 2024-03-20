@@ -65,4 +65,4 @@ jobs:
             sudo docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} && \
             sudo docker stop tfinder-container || true && \
             sudo docker rm tfinder-container || true && \
-            sudo docker run -d --name tfinder-container -p 8080:8080 ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}"
+            sudo docker run -d --name tfinder-container -p 8080:8080 ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
