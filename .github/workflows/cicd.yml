@@ -54,28 +54,17 @@ jobs:
           docker build -t ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} .
           docker push ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
 
-#      - name: Connect to GCE instance and run commands
-#        run: |
-#          echo '${{ secrets.GCP_SA_KEY }}' > gcp-key.json
-#          gcloud compute scp gcp-key.json tfinder-vm:~/ --zone asia-northeast3-a
-#          gcloud compute ssh tfinder-vm --zone asia-northeast3-a --command="\
-#            gcloud auth activate-service-account --key-file=gcp-key.json && \
-#            gcloud auth list && \
-#            gcloud auth configure-docker asia-northeast3-docker.pkg.dev -q && \
-#            sudo docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} && \
-#            sudo docker stop tfinder-container || true && \
-#            sudo docker rm tfinder-container || true && \
-#            sudo docker run -d --name tfinder-container -p 8080:8080 ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}"
-#          rm gcp-key.json
-
-      - name: SSH and Deploy to GCE
+      - name: Connect to GCE instance and run commands
         run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H 35.216.97.185 >> ~/.ssh/known_hosts
-          ssh -i ${{ secrets.GCE_SSH_PRIVATE_KEY }} tfinder4321@35.216.97.185 << EOF
-            sudo docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
-            sudo docker stop tfinder-container || true
-            sudo docker rm tfinder-container || true
-            sudo docker run -d --name tfinder-container -p 8080:8080 ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
-          EOF
-      
+          echo '${{ secrets.GCP_SA_KEY }}' > gcp-key.json
+          gcloud compute scp gcp-key.json tfinder-vm:~/ --zone asia-northeast3-a
+          gcloud compute ssh tfinder-vm --zone asia-northeast3-a --command="\
+            gcloud auth activate-service-account --key-file=gcp-key.json && \
+            gcloud auth list && \
+            gcloud auth configure-docker asia-northeast3-docker.pkg.dev -q && \
+            gcloud artifacts locations list && \
+            sudo docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} && \
+            sudo docker stop tfinder-container || true && \
+            sudo docker rm tfinder-container || true && \
+            sudo docker run -d --name tfinder-container -p 8080:8080 ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}"
+          rm gcp-key.json
