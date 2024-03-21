@@ -7,7 +7,7 @@ import org.example.domain.user.domain.User;
 import org.example.domain.user.service.UserService;
 import org.example.domain.user.type.AuthType;
 import org.example.domain.user.type.RoleType;
-import org.example.global.security.authentication.CustomUserDetails;
+import org.example.global.security.authentication.UserPrincipal;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -44,7 +44,7 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         else {
             user = registerUser(authType, oAuth2UserInfo);
         }
-        return CustomUserDetails.create(user, oAuth2UserInfo.getAttributes());
+        return UserPrincipal.create(user, oAuth2UserInfo.getAttributes());
     }
 
     private User registerUser(AuthType authType, OAuth2UserInfo oAuth2UserInfo) {
