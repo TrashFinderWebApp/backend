@@ -11,7 +11,6 @@ import java.util.Optional;
 import org.springframework.util.SerializationUtils;
 
 public class CookieUtils {
-    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     public static Optional<Cookie> getCookie(HttpServletRequest request, String name) {
         Cookie[] cookies = request.getCookies();
@@ -60,6 +59,6 @@ public class CookieUtils {
     }
 
     public static <T> T deserialize(Cookie cookie, Class<T> cls) throws IOException {
-        return objectMapper.readValue(Base64.getUrlDecoder().decode(cookie.getValue()), cls);
+        return cls.cast(SerializationUtils.deserialize(Base64.getUrlDecoder().decode(cookie.getValue())));
     }
 }
