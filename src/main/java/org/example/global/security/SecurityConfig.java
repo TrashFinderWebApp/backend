@@ -55,7 +55,7 @@ public class SecurityConfig {
 
             /* 우선적으로 모든 인증 요청에 대해 권한 허용, 이후 인증자만 접근 가능. 추후 세부 수정 예정 */
             authorization
-                    .requestMatchers("/oauth2/**").permitAll()
+                    .requestMatchers("/**").permitAll()
                     .anyRequest().authenticated();
         });
 
