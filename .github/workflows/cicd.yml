@@ -77,8 +77,8 @@ jobs:
           username: ${{ secrets.GCE_USERNAME }}
           key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
           script: |
-            echo "${{ secrets.GCP_SA_KEY }}" | docker login asia-northeast3-docker.pkg.dev -u _json_key --password-stdin && \
-            sudo docker pull ***/tfinder:3ee3b455edc823ae628625634fb05501d54c2fd0 && \
+            echo "${{ secrets.GCP_SA_KEY_LINE }}" | docker login asia-northeast3-docker.pkg.dev -u _json_key --password-stdin && \
+            sudo docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} && \
             sudo docker stop tfinder-container || true && \
             sudo docker rm tfinder-container || true && \
-            sudo docker run -d --name tfinder-container -p 8080:8080 ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:3ee3b455edc823ae628625634fb05501d54c2fd0
+            sudo docker run -d --name tfinder-container -p 8080:8080 ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}
