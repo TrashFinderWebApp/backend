@@ -71,12 +71,13 @@ jobs:
 #          rm gcp-key.json
 
       - name: Deploy to GCE instance
-        uses: appleboy/ssh-action@master
+        uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.GCE_HOST }}
           username: ${{ secrets.GCE_USERNAME }}
-          key: ${{ secrets.GCE_SSH_KEY }}
+          key: ${{ secrets.GCE_SSH_PRIVATE_KEY }}
           script: |
+            whoami
             docker login asia-northeast3-docker.pkg.dev -u _json_key -p "${{ secrets.GCP_SA_KEY }}"
             sudo docker pull ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} && \
             sudo docker stop tfinder-container || true && \
