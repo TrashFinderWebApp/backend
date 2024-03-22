@@ -37,6 +37,7 @@ dependencies {
 	implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
 
 	implementation 'com.github.napstr:logback-discord-appender:1.0.0'
+	implementation 'org.springframework:spring-webflux:6.1.5'
 
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
@@ -46,21 +47,21 @@ dependencies {
 	testImplementation 'org.springframework.security:spring-security-test'
 }
 
-//processResources.dependsOn('copySecret')
-//processResources.dependsOn('copySecret2')
-//
-//tasks.register('copySecret', Copy) {
-//	from 'backend_env/application.yaml' // 서브모듈에 있는 환경변수 설정파일을 복사한다.
-//	into 'src/main/resources'
-//}
-//
-//tasks.register('copySecret2', Copy) {
-//	from 'backend_env/yaml/application-prod.yaml'
-//	into 'src/main/resources/yaml'
-//
-//	from 'backend_env/yaml/application-dev.yaml'
-//	into 'src/main/resources/yaml'
-//}
+processResources.dependsOn('copySecret')
+processResources.dependsOn('copySecret2')
+
+tasks.register('copySecret', Copy) {
+	from 'backend_env/application.yml' // 서브모듈에 있는 환경변수 설정파일을 복사한다.
+	into 'src/main/resources'
+}
+
+tasks.register('copySecret2', Copy) {
+	from 'backend_env/yml/application-prod.yml'
+	into 'src/main/resources/yml'
+
+	from 'backend_env/yml/application-dev.yml'
+	into 'src/main/resources/yml'
+}
 
 tasks.named('test') {
 	useJUnitPlatform()
