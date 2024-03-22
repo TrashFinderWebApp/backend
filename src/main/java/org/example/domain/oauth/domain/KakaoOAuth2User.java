@@ -8,7 +8,7 @@ public class KakaoOAuth2User extends OAuth2UserInfo {
 
     public KakaoOAuth2User(Map<String, Object> attributes) {
         super((Map<String, Object>) attributes.get("kakao_account"));
-        this.id = (String) attributes.get("id");
+        this.id = attributes.get("id").toString();
     }
 
     @Override
