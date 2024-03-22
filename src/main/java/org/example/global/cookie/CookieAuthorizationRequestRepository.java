@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class CookieAuthorizationRequestRepository implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
     public static final String OAUTH2_AUTHORIZATION_REQUEST_COOKIE_NAME = "oauth2_request";
-    public static final String REDIRECT_URI_COOKIE_NAME = "oauth2_redirect_uri";
+    public static final String REDIRECT_URI_COOKIE_NAME = "redirect_uri";
     private static final int COOKIE_EXPIRE_SECONDS = 180;
 
 
