@@ -15,7 +15,7 @@ public class UserService {
     @Transactional(readOnly = true)//readOnly 적용 이유 : 성능상 우세
     public User findBySocialId(String socialId) {
         return userRepository.findBySocialId(socialId)
-                .orElseThrow(() -> new IllegalArgumentException("not found socialId"));
+                .orElse(null);
     }
 
     @Transactional
