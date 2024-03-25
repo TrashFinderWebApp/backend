@@ -10,9 +10,8 @@ import org.example.domain.user.type.RoleType;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 
-public class UserPrincipal implements UserDetails, OAuth2User {
+public class UserPrincipal implements UserDetails {
 
     private Long id;
     private String email;
@@ -34,16 +33,6 @@ public class UserPrincipal implements UserDetails, OAuth2User {
         UserPrincipal userDetails = new UserPrincipal(user.getId(), user.getEmail(), user.getSocialId(), authorities);
         userDetails.setAttributes(attributes);
         return userDetails;
-    }
-
-    @Override
-    public String getName() {
-        return socialId;
-    }
-
-    @Override
-    public Map<String, Object> getAttributes() {
-        return null;
     }
 
     @Override
