@@ -1,4 +1,4 @@
-package org.example.domain.oauth;
+package org.example.domain.user.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

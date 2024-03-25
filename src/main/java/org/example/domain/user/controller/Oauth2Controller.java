@@ -1,4 +1,4 @@
-package org.example.domain.oauth.controller;
+package org.example.domain.user.controller;
 
 public class Oauth2Controller {
 
