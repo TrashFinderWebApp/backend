@@ -6,7 +6,7 @@ WORKDIR /app
 
 # 빌드된 jar 파일과 application-dev.yaml 파일을 이미지 내로 복사
 COPY build/libs/tfinder.jar app.jar
-COPY backend_env/yml/application-dev.yaml application-dev.yaml
+COPY backend_env/yml/application-dev.yml application-dev.yml
 
 # 애플리케이션이 사용할 포트를 지정 (예: 8080)
 EXPOSE 8080
