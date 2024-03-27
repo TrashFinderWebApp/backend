@@ -10,9 +10,8 @@ import org.example.domain.user.type.RoleType;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 
-public class CustomUserDetails implements UserDetails, OAuth2User {
+public class UserPrincipal implements UserDetails {
 
     private Long id;
     private String email;
@@ -22,28 +21,18 @@ public class CustomUserDetails implements UserDetails, OAuth2User {
     @Setter
     private Map<String, Object> attributes;
 
-    public CustomUserDetails(Long id, String email, String socialId, Collection<? extends GrantedAuthority> authorities) {
+    public UserPrincipal(Long id, String email, String socialId, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.email = email;
         this.socialId = socialId;
         this.authorities = authorities;
     }
 
-    public static CustomUserDetails create(User user, Map<String, Object> attributes) {
+    public static UserPrincipal create(User user, Map<String, Object> attributes) {
         List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(RoleType.ROLE_USER.name()));
-        CustomUserDetails userDetails = new CustomUserDetails(user.getId(), user.getEmail(), user.getSocialId(), authorities);
+        UserPrincipal userDetails = new UserPrincipal(user.getId(), user.getEmail(), user.getSocialId(), authorities);
         userDetails.setAttributes(attributes);
         return userDetails;
-    }
-
-    @Override
-    public String getName() {
-        return socialId;
-    }
-
-    @Override
-    public Map<String, Object> getAttributes() {
-        return null;
     }
 
     @Override
