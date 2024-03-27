@@ -1,9 +1,9 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://34.47.83.200:3306/tfinder
+    url: jdbc:mysql://localhost:3306/tfinder
     username: root
-    password: tmvkdlsej4321!
+    password: 1234
 
 
   #Oauth2
@@ -24,3 +24,7 @@ spring:
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
 
+logging:
+  discord:
+    webhook-url: https://discord.com/api/webhooks/1219619148745670796/NqS5cuKxkAdPPEeNUeU7Rip8drYGUwfWWFgUo2p2XPoutoJmsDm4FdZ3c68taMbSqPww
+  config: classpath:logback.xml

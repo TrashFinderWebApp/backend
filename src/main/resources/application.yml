@@ -1,7 +1,7 @@
 spring:
   config:
     import:
-      - classpath:/yaml/application-prod.yml
-      - classpath:/yaml/application-dev.yml
+      - classpath:/yml/application-prod.yml
+      - classpath:/yml/application-dev.yml
   profiles:
     active: dev

@@ -36,6 +36,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
+      - name: Copy secret files from submodule
+        run: ./gradlew copySecret copySecret2
+
       - name: Test with Gradle
         run: ./gradlew test
 

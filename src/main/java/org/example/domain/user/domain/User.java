@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.example.domain.user.type.AuthType;
 import org.example.domain.user.type.RoleType;
 import org.example.global.domain.BaseTimeEntity;
@@ -18,6 +19,7 @@ import org.example.global.domain.BaseTimeEntity;
 @Entity
 @Builder
 @Getter
+@NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "user")
 public class User extends BaseTimeEntity {
@@ -25,7 +27,7 @@ public class User extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(name = "social_id", unique = true)
+    @Column(name = "social_id")
     private String socialId;
 
     @Column(name = "name", length = 10)

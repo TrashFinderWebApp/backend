@@ -24,12 +24,12 @@ spring:
 
           kakao:
             client-id: 6099feca54cc2f05f3b1d54c2410981c
-            client-secret: asfdafaffsdfsa
+            client-secret: CxquXWpmlIiVTXtRTm5DLNRYcXMer0Lg
             redirect-uri: http://localhost:8080/oauth2/callback/kakao
             authorization-grant-type: authorization_code
             scope: account_email,profile_nickname
             client-name: Kakao
-            client-authentication-method: POST
+            client-authentication-method: client_secret_post
         provider:
           naver:
             authorization-uri: https://nid.naver.com/oauth2.0/authorize
@@ -42,7 +42,16 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
+jwt:
+  secret: rkGU45258GGhiolLO2465TFY5345kGU45258GGhiolLO2465TFY5345
+  redis:
+    host: localhost
+    port: 6379 #추후 GCE서버로 전환
 oauth:
-  jwt: secret:rkGU45258GGhiolLO2465TFY5345kGU45258GGhiolLO2465TFY5345
-  authorizedRedirectUri: http://localhost:3000/oauth2/redirect
+  authorizedRedirectUri: http://localhost:8080/test #추후 프론트 서버로 전환
 
+# 배포 이후 디스코드 웹훅 uri 변경 예정(테스트 -> 웹프로젝트)
+logging:
+  discord:
+    webhook-uri: https://discord.com/api/webhooks/1220059927238934649/nIKM8Ap9qHWot328EwQoytvV1CiMdK6hUpsAoDlayti_v8waBkFulN78snX994rI8ONC
+  config: classpath:logback-spring.xml
