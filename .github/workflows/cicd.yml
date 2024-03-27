@@ -3,13 +3,12 @@ name: CI/CD
 on:
   push:
     branches:
-      - 'feature/cicd'
-    # - 'main'
-    # - 'dev'
-  # pull_request:
-  #   branches:
-  #     - 'main'
-  #     - 'dev'
+      - 'main'
+      - 'dev'
+  pull_request:
+    branches:
+      - 'main'
+      - 'dev'
 
 jobs:
   ci-cd:
