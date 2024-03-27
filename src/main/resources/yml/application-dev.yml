@@ -50,8 +50,3 @@ jwt:
 oauth:
   authorizedRedirectUri: http://localhost:8080/test #추후 프론트 서버로 전환
 
-# 배포 이후 디스코드 웹훅 uri 변경 예정(테스트 -> 웹프로젝트)
-logging:
-  discord:
-    webhook-uri: https://discord.com/api/webhooks/1220059927238934649/nIKM8Ap9qHWot328EwQoytvV1CiMdK6hUpsAoDlayti_v8waBkFulN78snX994rI8ONC
-  config: classpath:logback-spring.xml
