@@ -24,12 +24,9 @@ public class UserService {
         return userRepository.existsByEmail(email);
     }
 
-    public void userSignUp(UserSignUpRequest request) {
-
-    }
-
     @Transactional
-    public User saveUser(User user) {
-        return userRepository.save(user);
+    public void userSignUp(UserSignUpRequest request) {
+        userRepository.save(new User(request.getEmail(), request.getPassword()
+                , request.getName()));
     }
 }
