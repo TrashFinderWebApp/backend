@@ -1,5 +1,9 @@
 package org.example.domain.user.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.http.HttpResponse;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+@Tag(name = "users", description = "유저 회원가입/로그인 API")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/user")
@@ -19,6 +24,12 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/signup")
+    @Operation(summary = "유저 회원가입", description = "서비스 내 회원가입 API")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "회원가입 성공"),
+            @ApiResponse(responseCode = "400", description = "1. 이메일 중복 \t\n 2. 비밀번호 불일치 \t\n "
+                    + "3. 이메일 혹은 비밀번호 형식이 맞지 않습니다. \t\n 4. 이메일, 비밀번호, 이름이 비어 있습니다.")
+    })
     public ResponseEntity<?> userSingUp(@Valid @RequestBody UserSignUpRequest request) {
         if (isDuplicated(request.getEmail())) {
             return new ResponseEntity<>("이메일 중복입니다. 다시 입력해주세요.", HttpStatus.BAD_REQUEST);
