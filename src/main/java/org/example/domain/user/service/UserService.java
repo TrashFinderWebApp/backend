@@ -1,6 +1,7 @@
 package org.example.domain.user.service;
 
 import lombok.RequiredArgsConstructor;
+import org.example.domain.user.dto.request.UserSignInRequest;
 import org.example.domain.user.dto.request.UserSignUpRequest;
 import org.example.domain.user.repository.UserRepository;
 import org.example.domain.user.domain.User;
@@ -28,5 +29,10 @@ public class UserService {
     public void userSignUp(UserSignUpRequest request) {
         userRepository.save(new User(request.getEmail(), request.getPassword()
                 , request.getName()));
+    }
+
+    public boolean userSignIn(UserSignInRequest request) {
+
+        return true;
     }
 }
