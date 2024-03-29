@@ -20,6 +20,7 @@ import org.example.domain.auth.token.RefreshToken;
 import org.example.domain.auth.token.RefreshTokenRepository;
 import org.example.domain.user.dto.response.OAuth2ResponseDto;
 import org.example.domain.user.dto.response.OAuth2ResponseDto.TokenInfo;
+import org.example.domain.user.type.RoleType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -53,11 +54,11 @@ public class JwtProvider {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
-    public String createAccessToken(Authentication authentication){
+    public String createAccessToken(String userPk, RoleType role){
 
         return Jwts.builder()
-                .setSubject(authentication.getName())
-                .claim(AUTHORITIES_KEY, authentication.getAuthorities())
+                .setSubject(userPk)
+                .claim(AUTHORITIES_KEY, role)
                 .claim("type", TYPE_ACCESS)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 3))
@@ -65,12 +66,12 @@ public class JwtProvider {
                 .compact();
     }
 
-    public String createRefreshToken(Authentication authentication) {
+    public String createRefreshToken(String userPk, RoleType role) {
 
         return Jwts
                 .builder()
-                .setSubject(authentication.getName())
-                .claim(AUTHORITIES_KEY, authentication.getAuthorities())
+                .setSubject(userPk)
+                .claim(AUTHORITIES_KEY, role)
                 .claim("type", TYPE_REFRESH)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 3))
@@ -80,9 +81,9 @@ public class JwtProvider {
     }
 
     //Authentication 을 가지고 AccessToken, RefreshToken 을 생성하는 메서드
-    public OAuth2ResponseDto.TokenInfo generateToken(Authentication authentication) {
-        String accessToken = createAccessToken(authentication);
-        String refreshToken = createRefreshToken(authentication);
+    public OAuth2ResponseDto.TokenInfo generateToken(String userPk, RoleType role) {
+        String accessToken = createAccessToken(userPk, role);
+        String refreshToken = createRefreshToken(userPk, role);
         refreshTokenRepository.save(new RefreshToken(UUID.randomUUID().toString(),refreshToken));
         return new TokenInfo(accessToken,refreshToken);
     }
