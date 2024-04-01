@@ -8,7 +8,7 @@ import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.domain.member.dto.request.UserSignInRequest;
 import org.example.domain.member.dto.request.UserSignUpRequest;
-import org.example.domain.member.dto.response.AuthResponseDto.TokenInfo;
+import org.example.domain.member.dto.response.TokenInfo;
 import org.example.domain.member.service.MemberService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
