@@ -3,8 +3,7 @@ package org.example.domain.member.service;
 import lombok.RequiredArgsConstructor;
 import org.example.domain.member.dto.request.UserSignInRequest;
 import org.example.domain.member.dto.request.UserSignUpRequest;
-import org.example.domain.member.dto.response.AuthResponseDto;
-import org.example.domain.member.dto.response.AuthResponseDto.TokenInfo;
+import org.example.domain.member.dto.response.TokenInfo;
 import org.example.domain.member.repository.MemberRepository;
 import org.example.domain.member.domain.Member;
 import org.example.global.security.jwt.JwtProvider;
@@ -47,7 +46,7 @@ public class MemberService {
                 .orElseThrow(() -> new IllegalArgumentException("user doesn't find"));
     }
 
-    public AuthResponseDto.TokenInfo userSignIn(UserSignInRequest request) {
+    public TokenInfo userSignIn(UserSignInRequest request) {
         // 1. Login ID/PW 를 기반으로 Authentication 객체 생성
         // 이때 authentication 는 인증 여부를 확인하는 authenticated 값이 false
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());

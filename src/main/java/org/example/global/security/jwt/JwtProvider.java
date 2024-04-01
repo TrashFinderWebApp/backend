@@ -13,14 +13,10 @@ import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.example.domain.auth.token.RefreshToken;
 import org.example.domain.auth.token.RefreshTokenRepository;
-import org.example.domain.user.dto.response.OAuth2ResponseDto;
-import org.example.domain.user.dto.response.OAuth2ResponseDto.TokenInfo;
-import org.example.domain.user.type.RoleType;
+import org.example.domain.member.dto.response.TokenInfo;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -38,8 +34,7 @@ public class JwtProvider {
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String AUTHORITIES_KEY = "auth";
     private static final String BEARER_TYPE = "Bearer";
-    private static final String TYPE_ACCESS = "access";
-    private static final String TYPE_REFRESH = "refresh";
+
 
     private final RefreshTokenRepository refreshTokenRepository;
     private final Key key;
@@ -54,38 +49,27 @@ public class JwtProvider {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
-    public String createAccessToken(String userPk, RoleType role){
+    public TokenInfo createToken(Authentication authentication){
 
-        return Jwts.builder()
-                .setSubject(userPk)
-                .claim(AUTHORITIES_KEY, role)
-                .claim("type", TYPE_ACCESS)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 3))
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
-    }
+        String authorities = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(",")); //authentication 객체에서 권한을 반환한다.
 
-    public String createRefreshToken(String userPk, RoleType role) {
-
-        return Jwts
-                .builder()
-                .setSubject(userPk)
-                .claim(AUTHORITIES_KEY, role)
-                .claim("type", TYPE_REFRESH)
+        String accessToken = Jwts.builder()
+                .setSubject(authentication.getName())
+                .claim(AUTHORITIES_KEY, authorities)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 3))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
-    }
+        String refreshToken = Jwts.builder()
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 3))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
 
-    //Authentication 을 가지고 AccessToken, RefreshToken 을 생성하는 메서드
-    public OAuth2ResponseDto.TokenInfo generateToken(String userPk, RoleType role) {
-        String accessToken = createAccessToken(userPk, role);
-        String refreshToken = createRefreshToken(userPk, role);
-        refreshTokenRepository.save(new RefreshToken(UUID.randomUUID().toString(),refreshToken));
-        return new TokenInfo(accessToken,refreshToken);
+        return new TokenInfo(accessToken, refreshToken);
     }
 
     //JWT 토큰을 복호화하여 토큰에 들어있는 정보를 꺼내는 메서드
@@ -112,6 +96,7 @@ public class JwtProvider {
     //토큰 정보를 검증하는 메서드
     public boolean validateToken(String token) {
         try {
+            log.info("토큰 검증");
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (SecurityException | MalformedJwtException e) {//error 403
@@ -130,7 +115,6 @@ public class JwtProvider {
         try {
             return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody();
         } catch (ExpiredJwtException e) {
-            // ???
             return e.getClaims();
         }
     }
