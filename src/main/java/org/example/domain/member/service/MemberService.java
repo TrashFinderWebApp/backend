@@ -37,7 +37,7 @@ public class MemberService {
 
     @Transactional
     public void userSignUp(UserSignUpRequest request) {
-        memberRepository.save(new Member(request.getEmail(), request.getPassword()
+        memberRepository.save(new Member(request.getEmail(), passwordEncoder.encode(request.getPassword())
                 , request.getName()));
     }
 
