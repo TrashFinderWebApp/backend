@@ -13,7 +13,7 @@ import org.springframework.data.redis.core.index.Indexed;
 @RedisHash(value = "jwtToken", timeToLive = 30)
 public class RefreshToken {
     @Id
-    private String id;
+    private String accessToken;
 //60*60*24*3
     private String refreshToken;
 

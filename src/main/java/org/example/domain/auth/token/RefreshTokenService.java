@@ -10,7 +10,7 @@ public class RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
 
     @Transactional
-    public void saveTokenInfo(Long employeeId, String refreshToken, String accessToken) {
-        refreshTokenRepository.save(new RefreshToken(String.valueOf(employeeId), refreshToken));
+    public void saveTokenInfo(String accessToken, String refreshToken) {
+        refreshTokenRepository.save(new RefreshToken(accessToken, refreshToken));
     }
 }
