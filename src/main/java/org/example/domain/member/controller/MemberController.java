@@ -1,15 +1,15 @@
-package org.example.domain.user.controller;
+package org.example.domain.member.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import java.net.http.HttpResponse;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.domain.user.dto.request.UserSignInRequest;
-import org.example.domain.user.dto.request.UserSignUpRequest;
-import org.example.domain.user.service.UserService;
+import org.example.domain.member.dto.request.UserSignInRequest;
+import org.example.domain.member.dto.request.UserSignUpRequest;
+import org.example.domain.member.dto.response.AuthResponseDto.TokenInfo;
+import org.example.domain.member.service.MemberService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,8 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/user")
-public class UserController {
-    private final UserService userService;
+public class MemberController {
+    private final MemberService memberService;
 
     @PostMapping("/signup")
     @Operation(summary = "유저 회원가입", description = "서비스 내 회원가입 API")
@@ -37,7 +37,7 @@ public class UserController {
             return new ResponseEntity<>("이메일 중복입니다. 다시 입력해주세요.", HttpStatus.BAD_REQUEST);
         }
 
-        userService.userSignUp(request);
+        memberService.userSignUp(request);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -48,16 +48,20 @@ public class UserController {
             @ApiResponse(responseCode = "500", description = "서버에러")
     })
     public ResponseEntity<?> userSignIn(@Valid @RequestBody UserSignInRequest request) {
-        if (userService.userSignIn(request)) {
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", "access_token");
-            headers.set("RefreshToken", "refresh_token");
-            return new ResponseEntity<>(headers, HttpStatus.OK);
+        TokenInfo tokenInfo = memberService.userSignIn(request);
+
+        if (tokenInfo.getAccessToken().isEmpty() || tokenInfo.getRefreshToken().isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
-        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Authorization", tokenInfo.getAccessToken());
+        headers.set("RefreshToken", tokenInfo.getRefreshToken());
+        return new ResponseEntity<>(headers, HttpStatus.OK);
     }
 
     private boolean isDuplicated(String email) {
-        return userService.existsByEmail(email);
+        return memberService.existsByEmail(email);
     }
+
 }

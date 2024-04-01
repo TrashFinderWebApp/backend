@@ -1,9 +1,6 @@
-package org.example.domain.user.dto.request;
+package org.example.domain.member.dto.request;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 import lombok.Getter;
 
 @Getter

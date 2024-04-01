@@ -1,4 +1,4 @@
-package org.example.domain.user.dto.request;
+package org.example.domain.member.dto.request;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;

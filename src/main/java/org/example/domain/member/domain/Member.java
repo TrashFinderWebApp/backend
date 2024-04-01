@@ -1,4 +1,4 @@
-package org.example.domain.user.domain;
+package org.example.domain.member.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,8 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-import org.example.domain.user.type.AuthType;
-import org.example.domain.user.type.RoleType;
+import org.example.domain.member.type.RoleType;
 import org.example.global.domain.BaseTimeEntity;
 
 @Entity
@@ -22,13 +21,10 @@ import org.example.global.domain.BaseTimeEntity;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "user")
-public class User extends BaseTimeEntity {
+public class Member extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-
-    @Column(name = "social_id")
-    private String socialId;
 
     @Column(name = "name", length = 10)
     private String name;
@@ -40,19 +36,15 @@ public class User extends BaseTimeEntity {
     private String password;
 
     @Enumerated(EnumType.STRING)
-    private AuthType authType;
-
-    @Enumerated(EnumType.STRING)
     private RoleType role;
 
-    public User update(String email, String name, String oauth2Id) {
+    public Member update(String email, String name, String oauth2Id) {
         this.email = email;
         this.name = name;
-        this.socialId = oauth2Id;
         return this;
     }
 
-    public User (String email, String password, String name) {
+    public Member(String email, String password, String name) {
         this.email = email;
         this.password = password;
         this.name = name;

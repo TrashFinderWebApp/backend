@@ -1,10 +1,10 @@
-package org.example.domain.user.dto.response;
+package org.example.domain.member.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
-public class OAuth2ResponseDto {
+public class AuthResponseDto {
 
     @Builder
     @Getter
