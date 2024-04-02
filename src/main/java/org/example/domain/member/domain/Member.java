@@ -51,4 +51,8 @@ public class Member extends BaseTimeEntity {
         this.name = name;
         this.role = role;
     }
+
+    public Member(RoleType role) {
+        this.role = role;
+    }
 }

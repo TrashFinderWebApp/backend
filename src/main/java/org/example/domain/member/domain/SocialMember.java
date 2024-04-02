@@ -37,4 +37,10 @@ public class SocialMember {
     @JoinColumn(name = "member_id", referencedColumnName = "id")
     private Member member;
 
+    public SocialMember(String socialId, SocialType socialType, Member member) {
+        this.socialId = socialId;
+        this.socialType = socialType;
+        this.member = member;
+    }
+
 }
