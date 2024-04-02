@@ -26,7 +26,6 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 @RequiredArgsConstructor
 public class Oauth2Service {
-    private final MemberRepository memberRepository;
     private final SocialMemberRepository socialMemberRepository;
     private final JwtProvider jwtProvider;
 
@@ -36,10 +35,10 @@ public class Oauth2Service {
     @Value("${oauth2.client.kakao.client-secret}")
     private String kakaoClientSecret;
 
-    @Value("${oauth2.client.redirect-uri}")
+    @Value("${oauth2.client.kakao.redirect-uri}")
     private String kakaoRedirectUri;
 
-    @Value("${oauth2.client.token-uri}")
+    @Value("${oauth2.client.kakao.token-uri}")
     private String kakaoTokenUri;
 
     @Value("${oauth2.client.kakao.user-info-uri}")
@@ -126,7 +125,7 @@ public class Oauth2Service {
 
     @Transactional
     public void createSocialUser(String socialId, SocialType socialType) {
-        Member member = new Member(RoleType.ROLE_USER);
+        Member member = new Member(RoleType.USER);
         socialMemberRepository.save(new SocialMember(socialId, socialType, member));
     }
 
