@@ -18,10 +18,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@Tag(name = "users", description = "유저 회원가입/로그인 API")
+@Tag(name = "members", description = "유저 회원가입/로그인 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/user")
+@RequestMapping("/member")
 public class MemberController {
     private final MemberService memberService;
 

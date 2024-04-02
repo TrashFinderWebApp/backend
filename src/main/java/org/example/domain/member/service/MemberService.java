@@ -6,6 +6,7 @@ import org.example.domain.member.dto.request.UserSignUpRequest;
 import org.example.domain.member.dto.response.TokenInfo;
 import org.example.domain.member.repository.MemberRepository;
 import org.example.domain.member.domain.Member;
+import org.example.domain.member.type.RoleType;
 import org.example.global.security.jwt.JwtProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -31,7 +32,7 @@ public class MemberService {
     @Transactional
     public void userSignUp(UserSignUpRequest request) {
         memberRepository.save(new Member(request.getEmail(), passwordEncoder.encode(request.getPassword())
-                , request.getName()));
+                , request.getName(), RoleType.ROLE_USER));
     }
 
     @Transactional

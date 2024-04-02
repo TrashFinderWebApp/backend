@@ -1,7 +1,7 @@
 package org.example.domain.oauth.domain;
 
 import java.util.Map;
-import org.example.domain.user.type.AuthType;
+import org.example.domain.member.type.AuthType;
 
 public class OAuth2UserInfoFactory {
     public static OAuth2UserInfo getOAuth2UserInfo(AuthType authType, Map<String, Object> attributes) {

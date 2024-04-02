@@ -20,7 +20,7 @@ import org.example.global.domain.BaseTimeEntity;
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "user")
+@Table(name = "member")
 public class Member extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -32,10 +32,11 @@ public class Member extends BaseTimeEntity {
     @Column(name = "email", length = 20)
     private String email;
 
-    @Column(name = "user_password", length = 15)
+    @Column(name = "member_password", length = 15)
     private String password;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "role", nullable = false)
     private RoleType role;
 
     public Member update(String email, String name, String oauth2Id) {
@@ -44,9 +45,10 @@ public class Member extends BaseTimeEntity {
         return this;
     }
 
-    public Member(String email, String password, String name) {
+    public Member(String email, String password, String name, RoleType role) {
         this.email = email;
         this.password = password;
         this.name = name;
+        this.role = role;
     }
 }
