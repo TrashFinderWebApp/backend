@@ -1,5 +1,6 @@
 package org.example.domain.member.service;
 
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.example.domain.member.dto.request.UserSignInRequest;
 import org.example.domain.member.dto.request.UserSignUpRequest;
@@ -11,6 +12,7 @@ import org.example.global.security.jwt.JwtProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,7 +52,11 @@ public class MemberService {
         // authenticate 매서드가 실행될 때 CustomUserDetailsService 에서 만든 loadUserByUsername 메서드가 실행
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
+        String authorities = authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(",")); //authentication 객체에서 권한을 반환한다.
+
         // 3. 인증 정보를 기반으로 JWT 토큰 생성
-        return jwtProvider.createToken(authentication);
+        return jwtProvider.createToken(authentication.getName(), authorities);
     }
 }

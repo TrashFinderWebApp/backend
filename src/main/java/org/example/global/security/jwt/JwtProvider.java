@@ -13,11 +13,13 @@ import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.example.domain.auth.token.RefreshTokenRepository;
 import org.example.domain.auth.token.RefreshTokenService;
 import org.example.domain.member.dto.response.TokenInfo;
+import org.example.domain.member.type.RoleType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -51,15 +53,10 @@ public class JwtProvider {
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
-    public TokenInfo createToken(Authentication authentication){
-
-        String authorities = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(",")); //authentication 객체에서 권한을 반환한다.
-
+    public TokenInfo createToken(String userPk, String roles){
         String accessToken = Jwts.builder()
-                .setSubject(authentication.getName())
-                .claim(AUTHORITIES_KEY, authorities)
+                .setSubject(userPk)
+                .claim(AUTHORITIES_KEY, roles)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30))//30분 유효기간
                 .signWith(key, SignatureAlgorithm.HS256)
