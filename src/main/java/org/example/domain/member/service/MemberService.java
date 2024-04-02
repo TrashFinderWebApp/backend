@@ -23,12 +23,6 @@ public class MemberService {
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
 
-    @Transactional(readOnly = true)//readOnly 적용 이유 : 성능상 우세
-    public Member findBySocialId(String socialId) {
-        return memberRepository.findBySocialId(socialId)
-                .orElse(null);
-    }
-
     @Transactional(readOnly = true)
     public boolean existsByEmail(String email) {
         return memberRepository.existsByEmail(email);
