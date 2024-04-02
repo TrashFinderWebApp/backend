@@ -7,11 +7,12 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
+import org.locationtech.jts.geom.Point;
 
 @Builder
 @NoArgsConstructor
@@ -24,12 +25,15 @@ public class Trashcan {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    private BigDecimal latitude;
-    private BigDecimal longitude;
+    @Column(nullable = false,columnDefinition = "GEOMETRY")
+    private Point location;
 
     private String address;
     private String addressDetail;
 
     @Column(nullable = false)
     private String status;
+
+    @Column(nullable = false)
+    private Integer views = 0;
 }
