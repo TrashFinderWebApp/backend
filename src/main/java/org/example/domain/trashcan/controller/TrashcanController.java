@@ -48,6 +48,7 @@ public class TrashcanController {
                 dto.setLatitude(trashcan.getLocation().getY());
                 dto.setLongitude(trashcan.getLocation().getX());
                 dto.setAddressDetail(trashcan.getAddressDetail());
+                dto.setViews(trashcan.getViews());
                 return dto;
             }).collect(Collectors.toList());
 

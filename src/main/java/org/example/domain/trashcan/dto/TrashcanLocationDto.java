@@ -10,4 +10,5 @@ public class TrashcanLocationDto {
     private double latitude;
     private double longitude;
     private String addressDetail;
+    private int views;
 }

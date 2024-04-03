@@ -8,6 +8,20 @@ import org.springframework.data.repository.query.Param;
 import org.locationtech.jts.geom.Point;
 
 public interface TrashcanRepository extends JpaRepository<Trashcan, Long> {
-    @Query("from Trashcan t where distance(t.location, :location) < :radius")
+    @Query(value = """
+                SELECT * FROM (
+                    (SELECT *
+                    FROM trashcan
+                    WHERE ST_Distance_Sphere(location, :location) < :radius
+                    ORDER BY ST_Distance_Sphere(location, :location) ASC
+                    LIMIT 15)
+                    UNION
+                    (SELECT *
+                    FROM trashcan
+                    WHERE ST_Distance_Sphere(location, :location) < :radius
+                    ORDER BY views DESC
+                    LIMIT 15)
+                ) AS combined_results
+                """, nativeQuery = true)
     List<Trashcan> findWithinDistance(@Param("location") Point location, @Param("radius") double radius);
 }
