@@ -13,9 +13,11 @@ import org.springframework.data.redis.core.index.Indexed;
 @RedisHash(value = "jwtToken", timeToLive = 60 * 30)//임시로 30분 실제로는 2주할 예정
 public class RefreshToken {
     @Id
+    private String userPk;
+
+
     private String refreshToken;
 
 //60*60*24*3
-    private String accessToken;
 
 }
