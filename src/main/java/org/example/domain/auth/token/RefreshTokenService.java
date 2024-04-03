@@ -21,6 +21,6 @@ public class RefreshTokenService {
 
     @Transactional
     public void deleteById(String userPk) {
-
+        refreshTokenRepository.deleteById(userPk);
     }
 }
