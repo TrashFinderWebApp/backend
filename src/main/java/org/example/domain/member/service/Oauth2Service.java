@@ -46,9 +46,9 @@ public class Oauth2Service {
 
     public TokenInfo socialLogin(SocialType socialType, String code) {
         return switch (socialType) {
-            case GOOGLE -> kakaoLogin(code, socialType);
+            case GOOGLE -> googleLogin(code, socialType);
             case NAVER -> naverLogin(code, socialType);
-            case KAKAO -> googleLogin(code, socialType);
+            case KAKAO -> kakaoLogin(code, socialType);
             default -> throw new IllegalArgumentException("Invalid Provider Type.");
         };
     }
@@ -76,14 +76,14 @@ public class Oauth2Service {
     public String getKakaoAccessToken(String code) {
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
-
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type","authorization_code");
         body.add("client_id", kakaoClientId);
         body.add("client_secret", kakaoClientSecret);
         body.add("redirect_uri", kakaoRedirectUri);
+        body.add("code",code);
 
         HttpEntity<MultiValueMap<String, String>> tokenRequest = new HttpEntity<>(body, headers);
         KakaoToken kakaoToken = restTemplate.postForObject(kakaoTokenUri,tokenRequest, KakaoToken.class);
