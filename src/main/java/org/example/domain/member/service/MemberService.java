@@ -52,11 +52,12 @@ public class MemberService {
         // authenticate 매서드가 실행될 때 CustomUserDetailsService 에서 만든 loadUserByUsername 메서드가 실행
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
 
+        String userPk = findByUserEmail(authentication.getName()).getId().toString();
         String authorities = authentication.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(",")); //authentication 객체에서 권한을 반환한다.
 
         // 3. 인증 정보를 기반으로 JWT 토큰 생성
-        return jwtProvider.createToken(authentication.getName(), authorities);
+        return jwtProvider.createToken(userPk, authorities);
     }
 }

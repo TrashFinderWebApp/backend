@@ -1,9 +1,12 @@
 package org.example.domain.member.service;
 
+import io.jsonwebtoken.Claims;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.example.domain.auth.token.RefreshToken;
 import org.example.domain.auth.token.RefreshTokenRepository;
+import org.example.domain.auth.token.RefreshTokenService;
+import org.example.domain.member.domain.Member;
 import org.example.domain.member.dto.response.TokenInfo;
 import org.example.global.security.jwt.JwtProvider;
 import org.springframework.security.core.Authentication;
@@ -11,21 +14,22 @@ import org.springframework.security.core.GrantedAuthority;
 
 @RequiredArgsConstructor
 public class TokenService {
-    private final RefreshTokenRepository refreshTokenRepository;
+    private final RefreshTokenService refreshTokenService;
+    private final MemberService memberService;
     private final JwtProvider jwtProvider;
 
     public TokenInfo reIssueToken(String refreshToken) {
+        Claims claims = jwtProvider.parseClaims(refreshToken);
+        Member member = memberService.findByUserEmail(claims.getSubject());
+        String userPk = member.getId().toString();
 
-        RefreshToken token = refreshTokenRepository.findById(refreshToken)
-                .orElseThrow(() -> new IllegalArgumentException("DB에 리프레시 토큰이 없습니다."));
+        RefreshToken findRefreshToken = refreshTokenService.findById(userPk);
 
-        refreshTokenRepository.deleteByToken(refreshToken);
-        Authentication authentication = jwtProvider.getAuthentication(token.getAccessToken());
+        if (refreshToken.equals(findRefreshToken.getRefreshToken())) {
+            return jwtProvider.createToken(userPk, member.getRole().toString());
+        }
 
-        String authorities = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .collect(Collectors.joining(",")); //authentication 객체에서 권한을 반환한다.
-
-        return jwtProvider.createToken(authentication.getName(), authorities);
+        refreshTokenService.deleteById(userPk);
+        throw new IllegalArgumentException("리프레시 토큰이 일치하지 않아요.");
     }
 }

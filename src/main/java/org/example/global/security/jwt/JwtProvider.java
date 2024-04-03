@@ -63,12 +63,13 @@ public class JwtProvider {
                 .compact();
 
         String refreshToken = Jwts.builder()
+                .setSubject(userPk)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 14))
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
-        refreshTokenService.saveTokenInfo(accessToken, refreshToken);
+        refreshTokenService.saveTokenInfo(userPk, refreshToken);
 
         return new TokenInfo(accessToken, refreshToken);
     }
@@ -112,9 +113,9 @@ public class JwtProvider {
         return false;
     }
 
-    private Claims parseClaims(String accessToken) {
+    public Claims parseClaims(String token) {
         try {
-            return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody();
+            return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
         } catch (ExpiredJwtException e) {
             return e.getClaims();
         }

@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.domain.member.dto.request.UserSignInRequest;
@@ -47,17 +49,23 @@ public class MemberController {
             @ApiResponse(responseCode = "200", description = "로그인 성공"),
             @ApiResponse(responseCode = "500", description = "서버에러")
     })
-    public ResponseEntity<?> userSignIn(@Valid @RequestBody UserSignInRequest request) {
+    public ResponseEntity<?> userSignIn(@Valid @RequestBody UserSignInRequest request, HttpServletResponse response) {
         TokenInfo tokenInfo = memberService.userSignIn(request);
 
         if (tokenInfo.getAccessToken().isEmpty() || tokenInfo.getRefreshToken().isEmpty()) {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("Authorization", tokenInfo.getAccessToken());
-        headers.set("RefreshToken", tokenInfo.getRefreshToken());
-        return new ResponseEntity<>(headers, HttpStatus.OK);
+        Cookie cookie = new Cookie("refreshToken", tokenInfo.getRefreshToken());
+        cookie.setMaxAge(14*24*60*60);//expires in 2 weeks
+
+        cookie.setSecure(true);
+        cookie.setHttpOnly(true);
+
+        response.addCookie(cookie);
+        String accessToken = tokenInfo.getAccessToken();
+
+        return new ResponseEntity<>(accessToken, HttpStatus.OK);
     }
 
     private boolean isDuplicated(String email) {

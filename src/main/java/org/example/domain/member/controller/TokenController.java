@@ -1,6 +1,8 @@
 package org.example.domain.member.controller;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.domain.member.dto.response.TokenInfo;
 import org.example.domain.member.service.TokenService;
@@ -19,7 +21,7 @@ public class TokenController {
     private final TokenService tokenService;
 
     @GetMapping("/reissue")
-    public ResponseEntity<?> reissueToken(HttpServletRequest request) {
+    public ResponseEntity<?> reissueToken(HttpServletRequest request, HttpServletResponse response) {
 
         String encryptedRefreshToken = jwtProvider.resolveRefreshToken(request);
         if (encryptedRefreshToken == null) {
@@ -29,11 +31,16 @@ public class TokenController {
         try {
             TokenInfo tokenInfo = tokenService.reIssueToken(encryptedRefreshToken);
 
-            HttpHeaders headers = new HttpHeaders();
-            headers.set("Authorization", tokenInfo.getAccessToken());
-            headers.set("RefreshToken", tokenInfo.getRefreshToken());
+            Cookie cookie = new Cookie("refreshToken", tokenInfo.getRefreshToken());
+            cookie.setMaxAge(14*24*60*60);//expires in 2 weeks
 
-            return new ResponseEntity<>(headers, HttpStatus.OK);
+            cookie.setSecure(true);
+            cookie.setHttpOnly(true);
+
+            response.addCookie(cookie);
+            String accessToken = tokenInfo.getAccessToken();
+
+            return new ResponseEntity<>(accessToken, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(e.getMessage(),HttpStatus.UNAUTHORIZED);
         }
