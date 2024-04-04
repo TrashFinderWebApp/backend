@@ -12,16 +12,18 @@ public interface TrashcanRepository extends JpaRepository<Trashcan, Long> {
                 SELECT * FROM (
                     (SELECT *
                     FROM trashcan
-                    WHERE ST_Distance_Sphere(location, :location) < :radius
+                    WHERE ST_Distance_Sphere(location, :location) < :radius 
+                    AND status = :status
                     ORDER BY ST_Distance_Sphere(location, :location) ASC
                     LIMIT 15)
                     UNION
                     (SELECT *
                     FROM trashcan
                     WHERE ST_Distance_Sphere(location, :location) < :radius
+                    AND status = :status
                     ORDER BY views DESC
                     LIMIT 15)
                 ) AS combined_results
                 """, nativeQuery = true)
-    List<Trashcan> findWithinDistance(@Param("location") Point location, @Param("radius") double radius);
+    List<Trashcan> findWithinDistance(@Param("location") Point location, @Param("radius") double radius, @Param("status") String status);
 }
