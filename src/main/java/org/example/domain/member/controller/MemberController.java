@@ -15,6 +15,7 @@ import org.example.domain.member.service.MemberService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "members", description = "유저 회원가입/로그인 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/member")
+@RequestMapping("/api/members")
 public class MemberController {
     private final MemberService memberService;
 
@@ -47,25 +48,31 @@ public class MemberController {
     @Operation(summary = "유저 로그인", description = "서비스 내 로그인 API")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "로그인 성공"),
+            @ApiResponse(responseCode = "400", description = "비밀번호가 일치하지 않을 때"),
             @ApiResponse(responseCode = "500", description = "서버에러")
     })
     public ResponseEntity<?> userSignIn(@Valid @RequestBody UserSignInRequest request, HttpServletResponse response) {
-        TokenInfo tokenInfo = memberService.userSignIn(request);
+        try {
+            TokenInfo tokenInfo = memberService.userSignIn(request);
 
-        if (tokenInfo.getAccessToken().isEmpty() || tokenInfo.getRefreshToken().isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            if (tokenInfo.getAccessToken().isEmpty() || tokenInfo.getRefreshToken().isEmpty()) {
+                return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            Cookie cookie = new Cookie("refreshToken", tokenInfo.getRefreshToken());
+            cookie.setMaxAge(14 * 24 * 60 * 60);//expires in 2 weeks
+
+            cookie.setSecure(true);
+            cookie.setHttpOnly(true);
+
+            response.addCookie(cookie);
+            String accessToken = tokenInfo.getAccessToken();
+
+            return new ResponseEntity<>(accessToken, HttpStatus.OK);
+        } catch (BadCredentialsException e) {
+            System.out.println(e.getMessage()+"\n");
+            return new ResponseEntity<>("비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
         }
-
-        Cookie cookie = new Cookie("refreshToken", tokenInfo.getRefreshToken());
-        cookie.setMaxAge(14*24*60*60);//expires in 2 weeks
-
-        cookie.setSecure(true);
-        cookie.setHttpOnly(true);
-
-        response.addCookie(cookie);
-        String accessToken = tokenInfo.getAccessToken();
-
-        return new ResponseEntity<>(accessToken, HttpStatus.OK);
     }
 
     private boolean isDuplicated(String email) {
