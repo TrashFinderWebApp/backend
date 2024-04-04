@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "users", description = "유저 회원가입/로그인 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/oauth222")
+@RequestMapping("/api/oauth2")
 public class Oauth2Controller {
 
     private final Oauth2Service oauth2Service;
