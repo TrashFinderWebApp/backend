@@ -48,6 +48,7 @@ public class MemberController {
     @Operation(summary = "유저 로그인", description = "서비스 내 로그인 API")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "로그인 성공"),
+            @ApiResponse(responseCode = "400", description = "비밀번호가 일치하지 않을 때"),
             @ApiResponse(responseCode = "500", description = "서버에러")
     })
     public ResponseEntity<?> userSignIn(@Valid @RequestBody UserSignInRequest request, HttpServletResponse response) {
