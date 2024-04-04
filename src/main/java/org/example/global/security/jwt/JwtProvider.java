@@ -13,13 +13,13 @@ import java.security.Key;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.UUID;
+import java.util.List;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.example.domain.auth.token.RefreshToken;
 import org.example.domain.auth.token.RefreshTokenRepository;
-import org.example.domain.user.dto.response.OAuth2ResponseDto;
-import org.example.domain.user.dto.response.OAuth2ResponseDto.TokenInfo;
+import org.example.domain.auth.token.RefreshTokenService;
+import org.example.domain.member.dto.response.TokenInfo;
+import org.example.domain.member.type.RoleType;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -35,12 +35,12 @@ import org.springframework.util.StringUtils;
 public class JwtProvider {
 
     private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String REFRESH_HEADER = "RefreshToken";
     private static final String AUTHORITIES_KEY = "auth";
     private static final String BEARER_TYPE = "Bearer";
-    private static final String TYPE_ACCESS = "access";
-    private static final String TYPE_REFRESH = "refresh";
 
-    private final RefreshTokenRepository refreshTokenRepository;
+
+    private final RefreshTokenService refreshTokenService;
     private final Key key;
 
 
@@ -48,43 +48,30 @@ public class JwtProvider {
     // The JWT JWA Specification (RFC 7518, Section 3.2) states that keys used with HMAC-SHA algorithms MUST have a size >= 256 bits (the key size must be greater than or equal to the hash output size).
     // Consider using the io.jsonwebtoken.security.Keys#secretKeyFor(SignatureAlgorithm) method to create a key guaranteed to be secure enough for your preferred HMAC-SHA algorithm.
     public JwtProvider(@Value("${jwt.secret}") String secretKey,
-            RefreshTokenRepository refreshTokenRepository) {
-        this.refreshTokenRepository = refreshTokenRepository;
+            RefreshTokenService refreshTokenService) {
+        this.refreshTokenService = refreshTokenService;
         byte[] keyBytes = Decoders.BASE64.decode(secretKey);
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
-    public String createAccessToken(Authentication authentication){
-
-        return Jwts.builder()
-                .setSubject(authentication.getName())
-                .claim(AUTHORITIES_KEY, authentication.getAuthorities())
-                .claim("type", TYPE_ACCESS)
+    public TokenInfo createToken(String userPk, String roles){
+        String accessToken = Jwts.builder()
+                .setSubject(userPk)
+                .claim(AUTHORITIES_KEY, roles)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 3))
-                .signWith(key, SignatureAlgorithm.HS256)
-                .compact();
-    }
-
-    public String createRefreshToken(Authentication authentication) {
-
-        return Jwts
-                .builder()
-                .setSubject(authentication.getName())
-                .claim(AUTHORITIES_KEY, authentication.getAuthorities())
-                .claim("type", TYPE_REFRESH)
-                .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 3))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30))//30분 유효기간
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
-    }
+        String refreshToken = Jwts.builder()
+                .setSubject(userPk)
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 24 * 14))
+                .signWith(key, SignatureAlgorithm.HS256)
+                .compact();
 
-    //Authentication 을 가지고 AccessToken, RefreshToken 을 생성하는 메서드
-    public OAuth2ResponseDto.TokenInfo generateToken(Authentication authentication) {
-        String accessToken = createAccessToken(authentication);
-        String refreshToken = createRefreshToken(authentication);
-        refreshTokenRepository.save(new RefreshToken(UUID.randomUUID().toString(),refreshToken));
-        return new TokenInfo(accessToken,refreshToken);
+        refreshTokenService.saveTokenInfo(userPk, refreshToken);
+
+        return new TokenInfo(accessToken, refreshToken);
     }
 
     //JWT 토큰을 복호화하여 토큰에 들어있는 정보를 꺼내는 메서드
@@ -111,6 +98,7 @@ public class JwtProvider {
     //토큰 정보를 검증하는 메서드
     public boolean validateToken(String token) {
         try {
+            log.info("토큰 검증");
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (SecurityException | MalformedJwtException e) {//error 403
@@ -125,19 +113,26 @@ public class JwtProvider {
         return false;
     }
 
-    private Claims parseClaims(String accessToken) {
+    public Claims parseClaims(String token) {
         try {
-            return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(accessToken).getBody();
+            return Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
         } catch (ExpiredJwtException e) {
-            // ???
             return e.getClaims();
         }
     }
 
-    public String resolveToken(HttpServletRequest request) {
+    public String resolveAccessToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
         if (StringUtils.hasText(bearerToken) && bearerToken.startsWith(BEARER_TYPE)) {
             return bearerToken.substring(7);
+        }
+        return null;
+    }
+
+    public String resolveRefreshToken(HttpServletRequest request) {
+        String bearerToken = request.getHeader(REFRESH_HEADER);
+        if (StringUtils.hasText(bearerToken)) {
+            return bearerToken;
         }
         return null;
     }

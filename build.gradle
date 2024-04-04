@@ -75,3 +75,7 @@ tasks.register('copySecret2', Copy) {
 tasks.named('test') {
 	useJUnitPlatform()
 }
+
+bootJar {
+	archiveFileName = 'tfinder.jar'
+}

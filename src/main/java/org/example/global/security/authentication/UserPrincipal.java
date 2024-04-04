@@ -2,52 +2,31 @@ package org.example.global.security.authentication;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import lombok.Setter;
-import org.example.domain.user.domain.User;
-import org.example.domain.user.type.RoleType;
+import org.example.domain.member.domain.Member;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 public class UserPrincipal implements UserDetails {
 
-    private Long id;
-    private String email;
-    private String socialId;
-    private Collection<? extends GrantedAuthority> authorities;
+    private Member member;
 
-    @Setter
-    private Map<String, Object> attributes;
-
-    public UserPrincipal(Long id, String email, String socialId, Collection<? extends GrantedAuthority> authorities) {
-        this.id = id;
-        this.email = email;
-        this.socialId = socialId;
-        this.authorities = authorities;
-    }
-
-    public static UserPrincipal create(User user, Map<String, Object> attributes) {
-        List<GrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(RoleType.ROLE_USER.name()));
-        UserPrincipal userDetails = new UserPrincipal(user.getId(), user.getEmail(), user.getSocialId(), authorities);
-        userDetails.setAttributes(attributes);
-        return userDetails;
+    public UserPrincipal(Member member) {
+        this.member = member;
     }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return authorities;
+        return Collections.emptyList();
     }
 
     @Override
     public String getPassword() {
-        return null;
+        return member.getPassword();
     }
 
     @Override
     public String getUsername() {
-        return email;
+        return member.getEmail();
     }
 
     @Override
