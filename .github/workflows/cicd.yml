@@ -5,6 +5,7 @@ on:
     branches:
       - 'main'
       - 'dev'
+      - 'feature/cicd'
   pull_request:
     branches:
       - 'main'
@@ -13,6 +14,13 @@ on:
 jobs:
   ci-cd:
     runs-on: ubuntu-latest
+
+    services:
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+
     steps:
       - uses: actions/checkout@v3
         with:
