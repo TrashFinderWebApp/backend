@@ -8,5 +8,5 @@ import org.example.domain.member.domain.Member;
 @AllArgsConstructor
 public class RankDataResponse {
     private Member member;
-    private Integer totalScore;
+    private Long totalScore;
 }

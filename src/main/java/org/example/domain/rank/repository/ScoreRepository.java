@@ -22,7 +22,7 @@ public interface ScoreRepository extends JpaRepository<Score, Long> {
 
         for (Object[] row : result) {
             Member member = (Member) row[0];
-            Integer totalScore = ((Long) row[1]).intValue();
+            Long totalScore = (Long) row[1];
             responseList.add(new RankDataResponse(member, totalScore));
         }
 

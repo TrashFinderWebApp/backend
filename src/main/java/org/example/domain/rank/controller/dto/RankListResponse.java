@@ -9,5 +9,5 @@ import org.example.domain.member.domain.Member;
 public class RankListResponse {
     private Long memberId;
     private String memberName;
-    private Integer totalScore;
+    private Long totalScore;
 }
