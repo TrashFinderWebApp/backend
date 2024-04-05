@@ -36,10 +36,12 @@ public class MemberController {
                     + "3. 이메일 혹은 비밀번호 형식이 맞지 않습니다. \t\n 4. 이메일, 비밀번호, 이름이 비어 있습니다.")
     })
     public ResponseEntity<?> userSignUp(@Valid @RequestBody UserSignUpRequest request) {
+        if (isNotMatchedPassword(request)) {
+            return new ResponseEntity<>("비밀번호가 일치하지 않습니다. 다시 입력해주세요.", HttpStatus.BAD_REQUEST);
+        }
         if (isDuplicated(request.getEmail())) {
             return new ResponseEntity<>("이메일 중복입니다. 다시 입력해주세요.", HttpStatus.BAD_REQUEST);
         }
-
         memberService.userSignUp(request);
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -48,7 +50,7 @@ public class MemberController {
     @Operation(summary = "유저 로그인", description = "서비스 내 로그인 API")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "로그인 성공"),
-            @ApiResponse(responseCode = "400", description = "비밀번호가 일치하지 않을 때"),
+            @ApiResponse(responseCode = "400", description = "아이디나 비밀번호가 일치하지 않을 때"),
             @ApiResponse(responseCode = "500", description = "서버에러")
     })
     public ResponseEntity<?> userSignIn(@Valid @RequestBody UserSignInRequest request, HttpServletResponse response) {
@@ -71,7 +73,7 @@ public class MemberController {
             return new ResponseEntity<>(accessToken, HttpStatus.OK);
         } catch (BadCredentialsException e) {
             System.out.println(e.getMessage()+"\n");
-            return new ResponseEntity<>("비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("아이디나 비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -79,4 +81,7 @@ public class MemberController {
         return memberService.existsByEmail(email);
     }
 
+    private boolean isNotMatchedPassword(UserSignUpRequest request) {
+        return !request.getPassword().equals(request.getMatchPassword());
+    }
 }
