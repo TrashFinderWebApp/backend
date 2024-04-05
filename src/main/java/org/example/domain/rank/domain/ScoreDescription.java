@@ -1,4 +1,4 @@
-package org.example.domain.rank;
+package org.example.domain.rank.domain;
 
 import lombok.Getter;
 

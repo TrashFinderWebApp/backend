@@ -1,4 +1,4 @@
-package org.example.domain.rank;
+package org.example.domain.rank.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
