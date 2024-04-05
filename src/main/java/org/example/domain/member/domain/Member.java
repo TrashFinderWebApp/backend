@@ -63,7 +63,8 @@ public class Member extends BaseTimeEntity {
         this.role = role;
     }
 
-    public Member(RoleType role) {
+    public Member(String name, RoleType role) {
+        this.name = name;
         this.role = role;
     }
 }
