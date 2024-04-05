@@ -47,7 +47,6 @@ public class Member extends BaseTimeEntity {
 
     @Builder.Default
     @OneToMany(mappedBy = "member")
-    @JsonIgnore
     private List<Score> scoreList = new ArrayList<>();
 
     public Member update(String email, String name, String oauth2Id) {
