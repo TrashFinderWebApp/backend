@@ -1,5 +1,6 @@
 package org.example.domain.member.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -7,12 +8,17 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.example.domain.member.type.RoleType;
+import org.example.domain.rank.domain.Score;
 import org.example.global.domain.BaseTimeEntity;
 
 @Entity
@@ -38,6 +44,11 @@ public class Member extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false)
     private RoleType role;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "member")
+    @JsonIgnore
+    private List<Score> scoreList = new ArrayList<>();
 
     public Member update(String email, String name, String oauth2Id) {
         this.email = email;
