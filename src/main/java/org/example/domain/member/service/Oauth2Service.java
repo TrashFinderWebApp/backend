@@ -89,21 +89,21 @@ public class Oauth2Service {
     public TokenInfo kakaoLogin(String code, SocialType socialType) {
         String accessToken = getKakaoAccessToken(code);
         KakaoMember kakaoMember = getKakaoUserInfo(accessToken);
-        createSocialUser(kakaoMember.getSocialId(), socialType);
+        createSocialUser(kakaoMember.getSocialId(), kakaoMember.getKakaoAccount().getNickName(), socialType);
         return jwtProvider.createToken(kakaoMember.getSocialId(), socialType.toString());
     }
 
     public TokenInfo naverLogin(String code, SocialType socialType) {
         String accessToken = getNaverAccessToken(code);
         NaverMember naverMember = getNaverUserInfo(accessToken);
-        createSocialUser(naverMember.getNaverUserInfo().getId(), socialType);
+        createSocialUser(naverMember.getNaverUserInfo().getId(), naverMember.getNaverUserInfo().getName(), socialType);
         return jwtProvider.createToken(naverMember.getNaverUserInfo().getId(), socialType.toString());
     }
 
     public TokenInfo googleLogin(String code, SocialType socialType) {
         String accessToken = getGoogleAccessToken(code);
         GoogleMember googleMember = getGoogleUserInfo(accessToken);
-        createSocialUser(googleMember.getSocialId(), socialType);
+        createSocialUser(googleMember.getSocialId(), googleMember.getSocialName(), socialType);
         return jwtProvider.createToken(googleMember.getSocialId(), socialType.toString());
     }
 
@@ -184,13 +184,10 @@ public class Oauth2Service {
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
         headers.add("Authorization", "Bearer " + accessToken);
 
-        //바디 생성
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("property_keys",  "[\"id\"]");
-
         //헤더 + 바디
-        HttpEntity<MultiValueMap<String, String>> memberInfoRequest = new HttpEntity<>(body, headers);
-        return restTemplate.postForObject(kakaoUserInfo, memberInfoRequest, KakaoMember.class);
+        HttpEntity<MultiValueMap<String, String>> memberInfoRequest = new HttpEntity<>(headers);
+        ResponseEntity<KakaoMember> kakaoMember = restTemplate.exchange(kakaoUserInfo, HttpMethod.GET, memberInfoRequest, KakaoMember.class);
+        return kakaoMember.getBody();
     }
 
     public NaverMember getNaverUserInfo(String accessToken) {
@@ -221,8 +218,10 @@ public class Oauth2Service {
     }
 
     @Transactional
-    public void createSocialUser(String socialId, SocialType socialType) {
-        Member member = new Member(RoleType.USER);
-        socialMemberRepository.save(new SocialMember(socialId, socialType, member));
+    public void createSocialUser(String socialId, String socialName, SocialType socialType) {
+        if (!socialMemberRepository.existsBySocialId(socialId)) {
+            Member member = new Member(socialName, RoleType.USER);
+            socialMemberRepository.save(new SocialMember(socialId, socialType, member));
+        }
     }
 }
