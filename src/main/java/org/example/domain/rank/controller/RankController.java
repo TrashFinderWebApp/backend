@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.example.domain.member.domain.Member;
+import org.example.domain.member.dto.response.ErrorMessage;
 import org.example.domain.rank.controller.dto.RankListResponse;
 import org.example.domain.rank.service.RankService;
 import org.springframework.http.HttpStatus;
@@ -34,7 +35,7 @@ public class RankController {
             List<RankListResponse> scoreList = rankService.getScoreList();
             return new ResponseEntity<>(scoreList, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            return new ResponseEntity<>(new ErrorMessage(e.getMessage()), HttpStatus.NOT_FOUND);
         }
     }
 }
