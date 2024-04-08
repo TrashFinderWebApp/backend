@@ -10,9 +10,10 @@ import javax.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.domain.member.dto.request.UserSignInRequest;
 import org.example.domain.member.dto.request.UserSignUpRequest;
+import org.example.domain.member.dto.response.AccessTokenResponse;
+import org.example.domain.member.dto.response.ErrorMessage;
 import org.example.domain.member.dto.response.TokenInfo;
 import org.example.domain.member.service.MemberService;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -37,10 +38,10 @@ public class MemberController {
     })
     public ResponseEntity<?> userSignUp(@Valid @RequestBody UserSignUpRequest request) {
         if (isNotMatchedPassword(request)) {
-            return new ResponseEntity<>("비밀번호가 일치하지 않습니다. 다시 입력해주세요.", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorMessage("비밀번호가 일치하지 않습니다. 다시 입력해주세요."), HttpStatus.BAD_REQUEST);
         }
         if (isDuplicated(request.getEmail())) {
-            return new ResponseEntity<>("이메일 중복입니다. 다시 입력해주세요.", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorMessage("이메일 중복입니다. 다시 입력해주세요."), HttpStatus.BAD_REQUEST);
         }
         memberService.userSignUp(request);
         return new ResponseEntity<>(HttpStatus.OK);
@@ -70,10 +71,10 @@ public class MemberController {
             response.addCookie(cookie);
             String accessToken = tokenInfo.getAccessToken();
 
-            return new ResponseEntity<>(accessToken, HttpStatus.OK);
+            return new ResponseEntity<>(new AccessTokenResponse(accessToken), HttpStatus.OK);
         } catch (BadCredentialsException e) {
             System.out.println(e.getMessage()+"\n");
-            return new ResponseEntity<>("아이디나 비밀번호가 일치하지 않습니다.", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>(new ErrorMessage("아이디나 비밀번호가 일치하지 않습니다."), HttpStatus.BAD_REQUEST);
         }
     }
 
