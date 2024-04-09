@@ -11,6 +11,7 @@ import java.io.InputStream;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.example.domain.member.domain.Member;
+import org.example.domain.member.repository.MemberRepository;
 import org.example.domain.member.service.MemberService;
 import org.example.domain.trashcan.domain.Description;
 import org.example.domain.trashcan.domain.Image;
@@ -45,6 +46,7 @@ public class TrashcanService{
     private final RegistrationRepository registrationRepository;
     private final SuggestionRepository suggestionRepository;
     private final JwtProvider jwtProvider;
+    private final MemberRepository memberRepository;
     private final MemberService memberService;
 
     @Transactional
@@ -123,11 +125,12 @@ public class TrashcanService{
         saveDescription(description, savedTrashcan);
 
         Claims claims = jwtProvider.parseClaims(accessToken);
-        Member member = memberService.findByUserEmail(claims.getSubject());
+        Member member = memberRepository.findById(Long.parseLong(claims.getSubject())).get();
 
         Registration registration = new Registration();
         registration.setMember(member);
         registration.setTrashcan(trashcan);
+        registrationRepository.save(registration);
         return savedTrashcan;
     }
 
@@ -138,11 +141,12 @@ public class TrashcanService{
         saveDescription(description, savedTrashcan);
 
         Claims claims = jwtProvider.parseClaims(accessToken);
-        Member member = memberService.findByUserEmail(claims.getSubject());
+        Member member = memberRepository.findById(Long.parseLong(claims.getSubject())).get();
 
         Suggestion suggestion = new Suggestion();
         suggestion.setMember(member);
         suggestion.setTrashcan(trashcan);
+        suggestionRepository.save(suggestion);
         return savedTrashcan;
     }
 }

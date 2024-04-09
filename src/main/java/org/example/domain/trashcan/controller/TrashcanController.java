@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.ServletRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -131,11 +132,9 @@ public class TrashcanController {
             @RequestParam("address_detail") String addressDetail,
             @RequestParam("description") String description,
             @RequestParam("image_object") List<MultipartFile> imageObjects){
-        String encryptedRefreshToken = jwtProvider.resolveRefreshToken(request);
-        if (encryptedRefreshToken == null) {
-            return new ResponseEntity<>("헤더에 refresh token이 없습니다. 다시 로그인해주세요.",HttpStatus.UNAUTHORIZED);
-        }
         try {
+            String token = jwtProvider.resolveAccessToken(request);
+
             GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
             Point location = geometryFactory.createPoint(new Coordinate(longitude, latitude));
             Trashcan trashcan = new Trashcan();
@@ -143,7 +142,7 @@ public class TrashcanController {
             trashcan.setAddressDetail(addressDetail);
             trashcan.setStatus("registered");
 
-            Trashcan registeredTrashcan = trashcanService.registerTrashcan(trashcan, imageObjects, description, encryptedRefreshToken);
+            Trashcan registeredTrashcan = trashcanService.registerTrashcan(trashcan, imageObjects, description, token);
             return new ResponseEntity<>(new TrashcanRegistrationResponse("Location registered successfully."), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(new TrashcanRegistrationResponse("Invalid request data."), HttpStatus.BAD_REQUEST);
@@ -163,11 +162,9 @@ public class TrashcanController {
             @RequestParam("address_detail") String addressDetail,
             @RequestParam("description") String description,
             @RequestParam("image_object") List<MultipartFile> imageObjects) {
-        String encryptedRefreshToken = jwtProvider.resolveRefreshToken(request);
-        if (encryptedRefreshToken == null) {
-            return new ResponseEntity<>("헤더에 refresh token이 없습니다. 다시 로그인해주세요.",HttpStatus.UNAUTHORIZED);
-        }
         try {
+            String token = jwtProvider.resolveAccessToken((HttpServletRequest) request);
+
             GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
             Point location = geometryFactory.createPoint(new Coordinate(longitude, latitude));
             Trashcan trashcan = new Trashcan();
@@ -175,7 +172,7 @@ public class TrashcanController {
             trashcan.setAddressDetail(addressDetail);
             trashcan.setStatus("suggested");
 
-            Trashcan suggestedTrashcan = trashcanService.suggestTrashcan(trashcan, imageObjects, description, encryptedRefreshToken);
+            Trashcan suggestedTrashcan = trashcanService.suggestTrashcan(trashcan, imageObjects, description, token);
             return new ResponseEntity<>(new TrashcanRegistrationResponse("Location registered successfully."), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(new TrashcanRegistrationResponse("Invalid request data."), HttpStatus.BAD_REQUEST);
