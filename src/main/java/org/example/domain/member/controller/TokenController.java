@@ -8,6 +8,8 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.example.domain.member.dto.response.AccessTokenResponse;
+import org.example.domain.member.dto.response.ErrorMessage;
 import org.example.domain.member.dto.response.TokenInfo;
 import org.example.domain.member.service.TokenService;
 import org.example.global.security.jwt.JwtProvider;
@@ -35,7 +37,7 @@ public class TokenController {
 
         String encryptedRefreshToken = jwtProvider.resolveRefreshToken(request);
         if (encryptedRefreshToken == null) {
-            return new ResponseEntity<>("헤더에 refresh token이 없습니다. 다시 로그인해주세요.",HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(new ErrorMessage("헤더에 refresh token이 없습니다. 다시 로그인해주세요."),HttpStatus.UNAUTHORIZED);
         }
 
         try {
@@ -50,9 +52,9 @@ public class TokenController {
             response.addCookie(cookie);
             String accessToken = tokenInfo.getAccessToken();
 
-            return new ResponseEntity<>(accessToken, HttpStatus.OK);
+            return new ResponseEntity<>(new AccessTokenResponse(accessToken), HttpStatus.OK);
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(),HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>(new ErrorMessage(e.getMessage()),HttpStatus.UNAUTHORIZED);
         }
     }
 }

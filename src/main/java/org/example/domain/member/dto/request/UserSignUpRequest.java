@@ -21,6 +21,9 @@ public class UserSignUpRequest {
             message = "비밀번호는 대소문자, 숫자, 특수문자를 포함한 8~15자리로 생성해주세요.")
     private String password;
 
+    @NotBlank(message = "비밀번호를 다시 입력해주세요.")
+    private String matchPassword;
+
     @NotEmpty(message = "이름을 입력해주세요")
     @Size(max = 10)
     private String name;
