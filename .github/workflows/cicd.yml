@@ -47,7 +47,7 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Copy secret files from submodule
-        run: ./gradlew copySecret copySecret2
+        run: ./gradlew copySecret copySecret2 copySecret3
 
       - name: Test with Gradle
         run: ./gradlew test

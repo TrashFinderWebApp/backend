@@ -63,6 +63,7 @@ dependencies {
 
 processResources.dependsOn('copySecret')
 processResources.dependsOn('copySecret2')
+processResources.dependsOn('copySecret3')
 
 tasks.register('copySecret', Copy) {
 	from 'backend_env/application.yml' // 서브모듈에 있는 환경변수 설정파일을 복사한다.
@@ -75,6 +76,11 @@ tasks.register('copySecret2', Copy) {
 
 	from 'backend_env/yml/application-dev.yml'
 	into 'src/main/resources/yml'
+}
+
+tasks.register('copySecret3', Copy) {
+	from 'backend_env/tfinder-417312-8eda298328e3.json'
+	into 'src/main/resources'
 }
 
 tasks.named('test') {
