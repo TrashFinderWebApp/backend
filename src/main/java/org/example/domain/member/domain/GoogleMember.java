@@ -8,4 +8,7 @@ public class GoogleMember {
 
     @JsonProperty("id")
     private String socialId;
+
+    @JsonProperty("name")
+    private String socialName;
 }

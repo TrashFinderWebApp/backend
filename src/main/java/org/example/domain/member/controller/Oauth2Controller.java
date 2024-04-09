@@ -8,6 +8,8 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.example.domain.member.dto.request.Oauth2Request;
+import org.example.domain.member.dto.response.AccessTokenResponse;
+import org.example.domain.member.dto.response.ErrorMessage;
 import org.example.domain.member.dto.response.TokenInfo;
 import org.example.domain.member.service.Oauth2Service;
 import org.example.domain.member.type.SocialType;
@@ -37,13 +39,13 @@ public class Oauth2Controller {
     })
     public ResponseEntity<?> socialLogin(@RequestBody Oauth2Request oauth2Request, HttpServletResponse response) {
         SocialType socialType = oauth2Request.getSocialType();
-        String code = oauth2Request.getCode();
-        if (socialType == null || code == null) {
-            return new ResponseEntity<>("소셜 타입 혹은 코드가 없습니다.",HttpStatus.BAD_REQUEST);
+        String socialAccessToken = oauth2Request.getSocialAccessToken();
+        if (socialType == null || socialAccessToken == null) {
+            return new ResponseEntity<>(new ErrorMessage("소셜 타입 혹은 코드가 없습니다."),HttpStatus.BAD_REQUEST);
         }
 
         try {
-            TokenInfo tokenInfo = oauth2Service.socialLogin(socialType, code);
+            TokenInfo tokenInfo = oauth2Service.socialLogin(socialType, socialAccessToken);
 
 
             Cookie cookie = new Cookie("refreshToken", tokenInfo.getRefreshToken());
@@ -56,9 +58,11 @@ public class Oauth2Controller {
             response.addCookie(cookie);
             String accessToken = tokenInfo.getAccessToken();
 
-            return new ResponseEntity<>(accessToken, HttpStatus.OK);
+            return new ResponseEntity<>(new AccessTokenResponse(accessToken), HttpStatus.OK);
         } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(e.getMessage(),HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>(new ErrorMessage(e.getMessage()),HttpStatus.UNAUTHORIZED);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ErrorMessage(e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 }

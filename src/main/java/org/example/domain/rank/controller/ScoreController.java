@@ -27,8 +27,11 @@ public class ScoreController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "점수 부여 성공"),
     })
-    public ResponseEntity<?> addRegistrationScore(List<?> userList) {
-
+    public ResponseEntity<?> addRegistrationScore(Long trashcanId) {
+        //trashcan Id에 묶여있는 member id 리스트 조회
+        //멤버당 점수 추가
+        //모든 멤버 성공 시 OK
+        //한명이라도 실패시 롤백 후 실패 반환
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

@@ -7,6 +7,6 @@ import org.example.domain.member.type.SocialType;
 @Getter
 public class Oauth2Request {
     private SocialType socialType;
-    private String code;
+    private String socialAccessToken;
 
 }
