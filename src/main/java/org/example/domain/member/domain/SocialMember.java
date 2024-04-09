@@ -16,11 +16,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.example.domain.member.type.SocialType;
 
 @Entity
 @Builder
 @Getter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "social_member")

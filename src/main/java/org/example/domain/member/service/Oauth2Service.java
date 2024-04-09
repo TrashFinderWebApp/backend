@@ -77,34 +77,34 @@ public class Oauth2Service {
     @Value("${oauth2.client.google.user-info-uri}")
     private String googleUserInfo;
 
-    public TokenInfo socialLogin(SocialType socialType, String code) {
+    public TokenInfo socialLogin(SocialType socialType, String socialAccessToken) {
         return switch (socialType) {
-            case GOOGLE -> googleLogin(code, socialType);
-            case NAVER -> naverLogin(code, socialType);
-            case KAKAO -> kakaoLogin(code, socialType);
+            case GOOGLE -> googleLogin(socialAccessToken, socialType);
+            case NAVER -> naverLogin(socialAccessToken, socialType);
+            case KAKAO -> kakaoLogin(socialAccessToken, socialType);
             default -> throw new IllegalArgumentException("Invalid Provider Type.");
         };
     }
 
-    public TokenInfo kakaoLogin(String code, SocialType socialType) {
-        String accessToken = getKakaoAccessToken(code);
+    public TokenInfo kakaoLogin(String accessToken, SocialType socialType) {
+        //String accessToken = getKakaoAccessToken(code);
         KakaoMember kakaoMember = getKakaoUserInfo(accessToken);
-        createSocialUser(kakaoMember.getSocialId(), kakaoMember.getKakaoAccount().getNickName(), socialType);
-        return jwtProvider.createToken(kakaoMember.getSocialId(), socialType.toString());
+        Member member = createSocialUser(kakaoMember.getSocialId(), kakaoMember.getKakaoAccount().getNickName(), socialType);
+        return jwtProvider.createToken(member.getId().toString(), socialType.toString());
     }
 
-    public TokenInfo naverLogin(String code, SocialType socialType) {
-        String accessToken = getNaverAccessToken(code);
+    public TokenInfo naverLogin(String accessToken, SocialType socialType) {
+        //String accessToken = getNaverAccessToken(code);
         NaverMember naverMember = getNaverUserInfo(accessToken);
-        createSocialUser(naverMember.getNaverUserInfo().getId(), naverMember.getNaverUserInfo().getName(), socialType);
-        return jwtProvider.createToken(naverMember.getNaverUserInfo().getId(), socialType.toString());
+        Member member = createSocialUser(naverMember.getNaverUserInfo().getId(), naverMember.getNaverUserInfo().getName(), socialType);
+        return jwtProvider.createToken(member.getId().toString(), socialType.toString());
     }
 
-    public TokenInfo googleLogin(String code, SocialType socialType) {
-        String accessToken = getGoogleAccessToken(code);
+    public TokenInfo googleLogin(String accessToken, SocialType socialType) {
+        //String accessToken = getGoogleAccessToken(code);
         GoogleMember googleMember = getGoogleUserInfo(accessToken);
-        createSocialUser(googleMember.getSocialId(), googleMember.getSocialName(), socialType);
-        return jwtProvider.createToken(googleMember.getSocialId(), socialType.toString());
+        Member member = createSocialUser(googleMember.getSocialId(), googleMember.getSocialName(), socialType);
+        return jwtProvider.createToken(member.getId().toString(), socialType.toString());
     }
 
     public String getKakaoAccessToken(String code) {
@@ -218,10 +218,18 @@ public class Oauth2Service {
     }
 
     @Transactional
-    public void createSocialUser(String socialId, String socialName, SocialType socialType) {
+    public Member createSocialUser(String socialId, String socialName, SocialType socialType) {
         if (!socialMemberRepository.existsBySocialId(socialId)) {
             Member member = new Member(socialName, RoleType.USER);
-            socialMemberRepository.save(new SocialMember(socialId, socialType, member));
+            return socialMemberRepository.save(new SocialMember(socialId, socialType, member)).getMember();
         }
+        SocialMember socialMember = findBySocialId(socialId);
+        return socialMember.getMember();
+    }
+
+    @Transactional(readOnly = true)
+    public SocialMember findBySocialId(String socialId) {
+        return socialMemberRepository.findBySocialId(socialId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자 소셜id가 존재하지 않습니다."));
     }
 }
