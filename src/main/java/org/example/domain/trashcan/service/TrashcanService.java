@@ -5,21 +5,32 @@ import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
+import lombok.RequiredArgsConstructor;
+import org.example.domain.member.domain.Member;
+import org.example.domain.member.service.MemberService;
 import org.example.domain.trashcan.domain.Description;
 import org.example.domain.trashcan.domain.Image;
+import org.example.domain.trashcan.domain.Registration;
+import org.example.domain.trashcan.domain.Suggestion;
 import org.example.domain.trashcan.domain.Trashcan;
 import org.example.domain.trashcan.repository.DescriptionRepository;
 import org.example.domain.trashcan.repository.ImageRepository;
 import org.example.domain.trashcan.repository.RegistrationRepository;
 import org.example.domain.trashcan.repository.SuggestionRepository;
 import org.example.domain.trashcan.repository.TrashcanRepository;
+import org.example.global.security.jwt.JwtProvider;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -28,26 +39,18 @@ import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Coordinate;
 import org.springframework.util.ResourceUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.ResponseEntity;
 
 @Service
+@RequiredArgsConstructor
 public class TrashcanService{
     private final TrashcanRepository trashcanRepository;
     private final ImageRepository imageRepository;
     private final DescriptionRepository descriptionRepository;
     private final RegistrationRepository registrationRepository;
     private final SuggestionRepository suggestionRepository;
-
-    public TrashcanService(TrashcanRepository trashcanRepository,
-            ImageRepository imageRepository,
-            DescriptionRepository descriptionRepository,
-            RegistrationRepository registrationRepository,
-            SuggestionRepository suggestionRepository) {
-        this.trashcanRepository = trashcanRepository;
-        this.imageRepository = imageRepository;
-        this.descriptionRepository = descriptionRepository;
-        this.registrationRepository = registrationRepository;
-        this.suggestionRepository = suggestionRepository;
-    }
+    private final JwtProvider jwtProvider;
+    private final MemberService memberService;
 
     @Transactional
     public List<Trashcan> findTrashcansNear(double latitude, double longitude, double radius, String status) {
@@ -119,20 +122,32 @@ public class TrashcanService{
         descriptionRepository.save(descriptionObject);
     }
     @Transactional
-    public Trashcan registerTrashcan(Trashcan trashcan, List<MultipartFile> imageFiles, String description) throws IOException {
+    public Trashcan registerTrashcan(Trashcan trashcan, List<MultipartFile> imageFiles, String description, String accessToken) throws IOException {
         Trashcan savedTrashcan = trashcanRepository.save(trashcan);
         saveImages(imageFiles, savedTrashcan);
         saveDescription(description, savedTrashcan);
-        //유저 id 찾아서 registtaion 테이블도 넣어야함
+
+        Claims claims = jwtProvider.parseClaims(accessToken);
+        Member member = memberService.findByUserEmail(claims.getSubject());
+
+        Registration registration = new Registration();
+        registration.setMember(member);
+        registration.setTrashcan(trashcan);
         return savedTrashcan;
     }
 
     @Transactional
-    public Trashcan suggestTrashcan(Trashcan trashcan, List<MultipartFile> imageFiles, String description) throws IOException {
+    public Trashcan suggestTrashcan(Trashcan trashcan, List<MultipartFile> imageFiles, String description, String accessToken) throws IOException {
         Trashcan savedTrashcan = trashcanRepository.save(trashcan);
         saveImages(imageFiles, savedTrashcan);
         saveDescription(description, savedTrashcan);
-        //유저 id 찾아서 suggestion 테이블도 넣어야함
+
+        Claims claims = jwtProvider.parseClaims(accessToken);
+        Member member = memberService.findByUserEmail(claims.getSubject());
+
+        Suggestion suggestion = new Suggestion();
+        suggestion.setMember(member);
+        suggestion.setTrashcan(trashcan);
         return savedTrashcan;
     }
 }

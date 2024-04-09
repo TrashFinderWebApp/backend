@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +18,7 @@ import org.example.domain.trashcan.dto.TrashcanLocationDto;
 import org.example.domain.trashcan.dto.request.TrashcanRegistrationRequest;
 import org.example.domain.trashcan.dto.response.TrashcanRegistrationResponse;
 import org.example.domain.trashcan.service.TrashcanService;
+import org.example.global.security.jwt.JwtProvider;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
@@ -39,6 +41,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class TrashcanController {
 
     private final TrashcanService trashcanService;
+    private final JwtProvider jwtProvider;
     @GetMapping("/locations")
     @Operation(summary = "쓰레기통 찾기", description = "반경 내 쓰레기통 찾기")
     @ApiResponses(value = {
@@ -122,11 +125,16 @@ public class TrashcanController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
     })
     public ResponseEntity<?> registerTrashcan(
+            HttpServletRequest request,
             @RequestParam("latitude") double latitude,
             @RequestParam("longitude") double longitude,
             @RequestParam("address_detail") String addressDetail,
             @RequestParam("description") String description,
-            @RequestParam("image_object") List<MultipartFile> imageObjects) {
+            @RequestParam("image_object") List<MultipartFile> imageObjects){
+        String encryptedRefreshToken = jwtProvider.resolveRefreshToken(request);
+        if (encryptedRefreshToken == null) {
+            return new ResponseEntity<>("헤더에 refresh token이 없습니다. 다시 로그인해주세요.",HttpStatus.UNAUTHORIZED);
+        }
         try {
             GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
             Point location = geometryFactory.createPoint(new Coordinate(longitude, latitude));
@@ -135,7 +143,7 @@ public class TrashcanController {
             trashcan.setAddressDetail(addressDetail);
             trashcan.setStatus("registered");
 
-            Trashcan registeredTrashcan = trashcanService.registerTrashcan(trashcan, imageObjects, description);
+            Trashcan registeredTrashcan = trashcanService.registerTrashcan(trashcan, imageObjects, description, encryptedRefreshToken);
             return new ResponseEntity<>(new TrashcanRegistrationResponse("Location registered successfully."), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(new TrashcanRegistrationResponse("Invalid request data."), HttpStatus.BAD_REQUEST);
@@ -149,11 +157,16 @@ public class TrashcanController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터"),
     })
     public ResponseEntity<?> suggestTrashcan(
+            HttpServletRequest request,
             @RequestParam("latitude") double latitude,
             @RequestParam("longitude") double longitude,
             @RequestParam("address_detail") String addressDetail,
             @RequestParam("description") String description,
             @RequestParam("image_object") List<MultipartFile> imageObjects) {
+        String encryptedRefreshToken = jwtProvider.resolveRefreshToken(request);
+        if (encryptedRefreshToken == null) {
+            return new ResponseEntity<>("헤더에 refresh token이 없습니다. 다시 로그인해주세요.",HttpStatus.UNAUTHORIZED);
+        }
         try {
             GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
             Point location = geometryFactory.createPoint(new Coordinate(longitude, latitude));
@@ -162,7 +175,7 @@ public class TrashcanController {
             trashcan.setAddressDetail(addressDetail);
             trashcan.setStatus("suggested");
 
-            Trashcan suggestedTrashcan = trashcanService.suggestTrashcan(trashcan, imageObjects, description);
+            Trashcan suggestedTrashcan = trashcanService.suggestTrashcan(trashcan, imageObjects, description, encryptedRefreshToken);
             return new ResponseEntity<>(new TrashcanRegistrationResponse("Location registered successfully."), HttpStatus.CREATED);
         } catch (Exception e) {
             return new ResponseEntity<>(new TrashcanRegistrationResponse("Invalid request data."), HttpStatus.BAD_REQUEST);
