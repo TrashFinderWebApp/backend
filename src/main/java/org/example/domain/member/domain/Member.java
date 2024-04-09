@@ -17,6 +17,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.example.domain.member.type.RoleType;
 import org.example.domain.rank.domain.Score;
 import org.example.global.domain.BaseTimeEntity;
@@ -24,6 +25,7 @@ import org.example.global.domain.BaseTimeEntity;
 @Entity
 @Builder
 @Getter
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "member")
@@ -62,7 +64,8 @@ public class Member extends BaseTimeEntity {
         this.role = role;
     }
 
-    public Member(RoleType role) {
+    public Member(String name, RoleType role) {
+        this.name = name;
         this.role = role;
     }
 }

@@ -2,6 +2,7 @@ package org.example.global.security;
 
 
 import java.util.Arrays;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.example.global.security.filter.JwtAuthenticationFilter;
 import org.example.global.security.jwt.JwtProvider;
@@ -63,16 +64,16 @@ public class SecurityConfig {
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring().requestMatchers(
                 "/", "/oauth2**",
-                "/swagger-ui/**", "/api-docs/**"); //swagger
+                "/swagger-ui/**", "/api-docs/**", "/api/trashcan/**"); //swagger, 쓰레기통 데이터 들어갔는지 확인을 위한 임시 설정
     }
 
     //cors 설정
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("https://112.157.225.138:3000");
-        configuration.addAllowedOrigin("http://112.157.225.138:3000");
+        configuration.setAllowedOrigins(List.of("https://112.157.225.138:3000", "http://112.157.225.138:3000", "http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"));
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);

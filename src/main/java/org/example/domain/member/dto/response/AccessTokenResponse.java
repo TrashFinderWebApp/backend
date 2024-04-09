@@ -6,8 +6,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class ErrorMessage {
-    @Schema(description = "에러 메세지", example = "사용자 id가 존재하지 않습니다.")
-    private String errorMessage;
+public class AccessTokenResponse {
+    @Schema(description = "로그인 시 주어지는 엑세스 토큰", example = "df234scERFDAEEF2348dsDFfew...")
+    private String accessToken;
 }
-
