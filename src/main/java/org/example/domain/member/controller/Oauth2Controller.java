@@ -45,11 +45,8 @@ public class Oauth2Controller {
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public ResponseEntity<?> socialLogin(@RequestBody Oauth2Request oauth2Request, HttpServletResponse response) {
-        SocialType socialType = oauth2Request.getSocialType();
+        SocialType socialType = SocialType.valueOf(oauth2Request.getSocialType());
         String socialAccessToken = oauth2Request.getSocialAccessToken();
-        if (socialType == null || socialAccessToken == null) {
-            return new ResponseEntity<>(new ErrorMessage("소셜 타입 혹은 코드가 없습니다."),HttpStatus.BAD_REQUEST);
-        }
 
         try {
             TokenInfo tokenInfo = oauth2Service.socialLogin(socialType, socialAccessToken);
