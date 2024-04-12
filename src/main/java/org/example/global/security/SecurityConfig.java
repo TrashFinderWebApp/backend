@@ -77,6 +77,9 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+
+        CorsConfiguration trashcanConfig = new CorsConfiguration(configuration);
+        source.registerCorsConfiguration("/api/trashcan/**", trashcanConfig);
         return source;
     }
 
