@@ -121,6 +121,7 @@ public class TrashcanService{
     @Transactional
     public Trashcan registerTrashcan(Trashcan trashcan, List<MultipartFile> imageFiles, String description, String accessToken) throws IOException {
         Trashcan savedTrashcan = trashcanRepository.save(trashcan);
+        System.out.println(imageFiles);
         saveImages(imageFiles, savedTrashcan);
         saveDescription(description, savedTrashcan);
 
