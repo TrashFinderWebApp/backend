@@ -2,6 +2,7 @@ package org.example.global.security;
 
 
 import java.util.Arrays;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.example.global.security.filter.JwtAuthenticationFilter;
 import org.example.global.security.jwt.JwtProvider;
@@ -70,9 +71,9 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("https://112.157.225.138:3000");
-        configuration.addAllowedOrigin("http://112.157.225.138:3000");
+        configuration.setAllowedOrigins(List.of("https://112.157.225.138:3000", "http://112.157.225.138:3000", "http://localhost:3000"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"));
+        configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
