@@ -39,3 +39,7 @@ out/
 ### .yml
 *.yml
 application.yml
+
+### GCP
+tfinder-417312-8eda298328e3.json
+*.json

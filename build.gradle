@@ -40,6 +40,10 @@ dependencies {
 	implementation 'org.hibernate:hibernate-spatial:6.4.1.Final'
 	implementation 'org.locationtech.jts:jts-core:1.18.1'
 
+	/* cloud storage*/
+	implementation group: 'org.springframework.cloud', name: 'spring-cloud-gcp-starter', version: '1.2.5.RELEASE'
+	implementation group: 'org.springframework.cloud', name: 'spring-cloud-gcp-storage', version: '1.2.5.RELEASE'
+
 	/* jwt */
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
 	implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
@@ -58,6 +62,7 @@ dependencies {
 
 processResources.dependsOn('copySecret')
 processResources.dependsOn('copySecret2')
+processResources.dependsOn('copySecret3')
 
 tasks.register('copySecret', Copy) {
 	from 'backend_env/application.yml' // 서브모듈에 있는 환경변수 설정파일을 복사한다.
@@ -70,6 +75,11 @@ tasks.register('copySecret2', Copy) {
 
 	from 'backend_env/yml/application-dev.yml'
 	into 'src/main/resources/yml'
+}
+
+tasks.register('copySecret3', Copy) {
+	from 'backend_env/tfinder-417312-8eda298328e3.json'
+	into 'src/main/resources'
 }
 
 tasks.named('test') {
