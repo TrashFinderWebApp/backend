@@ -63,7 +63,7 @@ jobs:
       - name: Set up Cloud SDK
         uses: 'google-github-actions/setup-gcloud@v2'
 
-      - name: Configure Docker
+      - name: Configure Dockern
         run: gcloud auth configure-docker asia-northeast3-docker.pkg.dev
 
       - name: Build and push Docker image to GCP Artifact Registry with cache

@@ -125,6 +125,7 @@ public class TrashcanController {
                 images, // 이미지 URL 리스트
                 descriptions, // 설명 텍스트 리스트
                 trashcan.getViews(),
+                trashcan.getStatus(),
                 count
         );
 
