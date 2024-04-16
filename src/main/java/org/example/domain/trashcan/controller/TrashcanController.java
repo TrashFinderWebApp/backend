@@ -103,6 +103,8 @@ public class TrashcanController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Location not found."));
         }
 
+        trashcanService.increaseTrashcanViews(id);
+
         Trashcan trashcan = trashcanOptional.get();
         List<String> images = trashcanService.getImagesByTrashcanId(id).stream()
                 .map(Image::getImage)

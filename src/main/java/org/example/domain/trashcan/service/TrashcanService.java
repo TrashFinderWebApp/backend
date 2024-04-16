@@ -81,6 +81,15 @@ public class TrashcanService{
         return suggestionRepository.countByTrashcanId(trashcanId);
     }
 
+    @Transactional
+    public void increaseTrashcanViews(Long id){
+        Optional<Trashcan> trashcanOptional = trashcanRepository.findById(id);
+        trashcanOptional.ifPresent(trashcan -> {
+            trashcan.increaseViews();
+            trashcanRepository.save(trashcan);
+        });
+    }
+
     @Value("${spring.cloud.gcp.storage.credentials.location}")
     private String keyFileName;
 
