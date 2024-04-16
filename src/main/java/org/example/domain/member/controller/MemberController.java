@@ -42,6 +42,7 @@ public class MemberController {
                     + "3. 이메일 혹은 비밀번호 형식이 맞지 않습니다. \t\n 4. 이메일, 비밀번호, 이름이 비어 있습니다.",
             content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
+
     public ResponseEntity<?> userSignUp(@Valid @RequestBody UserSignUpRequest request) {
         if (isNotMatchedPassword(request)) {
             return new ResponseEntity<>(new ErrorMessage("비밀번호가 일치하지 않습니다. 다시 입력해주세요."), HttpStatus.BAD_REQUEST);
@@ -63,7 +64,7 @@ public class MemberController {
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
             @ApiResponse(responseCode = "500", description = "서버에러")
     })
-    public ResponseEntity<?> userSignIn(@Valid @RequestBody UserSignInRequest request, HttpServletResponse response) {
+    public ResponseEntity<?> userSignIn(@RequestBody @Valid UserSignInRequest request, HttpServletResponse response) {
         try {
             TokenInfo tokenInfo = memberService.userSignIn(request);
 

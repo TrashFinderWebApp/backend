@@ -1,6 +1,6 @@
 package org.example.domain.member.dto.request;
 
-import javax.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 
 @Getter
