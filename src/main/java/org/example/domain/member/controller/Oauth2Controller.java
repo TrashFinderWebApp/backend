@@ -55,7 +55,7 @@ public class Oauth2Controller {
             cookie.setMaxAge(14*24*60*60);//expires in 2 weeks
             cookie.setPath("/");
 
-            //cookie.setSecure(true);//http통신에서는 전달x, https에서만 전달
+            cookie.setSecure(true);//http통신에서는 전달x, https에서만 전달
             cookie.setHttpOnly(true);//XSS 예방
 
             response.addCookie(cookie);
