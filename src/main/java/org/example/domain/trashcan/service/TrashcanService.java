@@ -8,6 +8,7 @@ import io.jsonwebtoken.Claims;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.NoSuchElementException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.example.domain.member.domain.Member;
@@ -130,18 +131,47 @@ public class TrashcanService{
     @Transactional
     public Trashcan registerTrashcan(Trashcan trashcan, List<MultipartFile> imageFiles, String description, String accessToken) throws IOException {
         Trashcan savedTrashcan = trashcanRepository.save(trashcan);
-        System.out.println(imageFiles);
         saveImages(imageFiles, savedTrashcan);
         saveDescription(description, savedTrashcan);
 
         Claims claims = jwtProvider.parseClaims(accessToken);
-        Member member = memberRepository.findById(Long.parseLong(claims.getSubject())).get();
 
-        Registration registration = new Registration();
-        registration.setMember(member);
-        registration.setTrashcan(trashcan);
-        registrationRepository.save(registration);
+        memberRepository.findById(Long.parseLong(claims.getSubject()))
+                .map(member -> {
+                    Registration registration = new Registration();
+                    registration.setMember(member);
+                    registration.setTrashcan(trashcan);
+                    registrationRepository.save(registration);
+                    return registration;
+                }).orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
+
         return savedTrashcan;
+    }
+
+    @Transactional
+    public void registerTrashcanId(Long trashcanId, List<MultipartFile> imageFiles, String description, String accessToken) throws IOException {
+        // 쓰레기통 ID로 쓰레기통 엔티티 조회
+        Trashcan trashcan = trashcanRepository.findById(trashcanId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 쓰레기통을 찾을 수 없습니다. ID: " + trashcanId));
+
+        // 이미지 정보 저장
+        saveImages(imageFiles, trashcan);
+
+        // 설명 정보 저장
+        saveDescription(description, trashcan);
+
+        //registration 정보 저장
+        Claims claims = jwtProvider.parseClaims(accessToken);
+
+        memberRepository.findById(Long.parseLong(claims.getSubject()))
+                .map(member -> {
+                    Registration registration = new Registration();
+                    registration.setMember(member);
+                    registration.setTrashcan(trashcan);
+                    registrationRepository.save(registration);
+                    return registration;
+                }).orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
+
     }
 
     @Transactional
@@ -158,5 +188,31 @@ public class TrashcanService{
         suggestion.setTrashcan(trashcan);
         suggestionRepository.save(suggestion);
         return savedTrashcan;
+    }
+
+    @Transactional
+    public void suggestTrashcanId(Long trashcanId, List<MultipartFile> imageFiles, String description, String accessToken) throws IOException {
+        // 쓰레기통 ID로 쓰레기통 엔티티 조회
+        Trashcan trashcan = trashcanRepository.findById(trashcanId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 쓰레기통을 찾을 수 없습니다. ID: " + trashcanId));
+
+        // 이미지 정보 저장
+        saveImages(imageFiles, trashcan);
+
+        // 설명 정보 저장
+        saveDescription(description, trashcan);
+
+        //registration 정보 저장
+        Claims claims = jwtProvider.parseClaims(accessToken);
+
+        memberRepository.findById(Long.parseLong(claims.getSubject()))
+                .map(member -> {
+                    Suggestion suggestion = new Suggestion();
+                    suggestion.setMember(member);
+                    suggestion.setTrashcan(trashcan);
+                    suggestionRepository.save(suggestion);
+                    return suggestion;
+                }).orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
+
     }
 }

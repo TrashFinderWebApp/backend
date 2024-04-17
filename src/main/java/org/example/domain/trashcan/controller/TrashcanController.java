@@ -190,6 +190,29 @@ public class TrashcanController {
         }
     }
 
+    @PostMapping("/registrations/{id}")
+    @Operation(summary = "등록 쓰레기통 정보 추가", description = "기존 쓰레기통의 정보를 추가합니다. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "쓰레기통 정보 추가 성공", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content(mediaType = "application/json"))
+    })
+    public ResponseEntity<?> registerTrashcanId(
+            @PathVariable("id") Long trashcanId,
+            HttpServletRequest request,
+            @RequestParam("image_object") List<MultipartFile> imageObjects,
+            @RequestParam("description") String description) {
+        try {
+            String token = jwtProvider.resolveAccessToken(request);
+            trashcanService.registerTrashcanId(trashcanId, imageObjects, description, token);
+            return ResponseEntity.ok().body(new TrashcanMessageResponse("정보 추가 성공"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ErrorMessage("잘못된 요청 데이터: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorMessage("서버 내부 오류: " + e.getMessage()));
+        }
+    }
+
     @PostMapping("/suggestions")
     @Operation(summary = "쓰레기통 위치 제안", description = "쓰레기통이 설치되길 원하는 위치를 제안합니다. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
     @ApiResponses(value = {
@@ -222,6 +245,29 @@ public class TrashcanController {
         } catch (Exception e) {
             ErrorMessage errorMessage = new ErrorMessage("An error occurred.");
             return new ResponseEntity<>(errorMessage, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PostMapping("/suggestions/{id}")
+    @Operation(summary = "제안 쓰레기통 정보 추가", description = "기존 쓰레기통의 정보를 추가합니다. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "쓰레기통 정보 추가 성공", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터", content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content(mediaType = "application/json"))
+    })
+    public ResponseEntity<?> suggestTrashcanId(
+            @PathVariable("id") Long trashcanId,
+            HttpServletRequest request,
+            @RequestParam("image_object") List<MultipartFile> imageObjects,
+            @RequestParam("description") String description) {
+        try {
+            String token = jwtProvider.resolveAccessToken(request);
+            trashcanService.suggestTrashcanId(trashcanId, imageObjects, description, token);
+            return ResponseEntity.ok().body(new TrashcanMessageResponse("정보 추가 성공"));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ErrorMessage("잘못된 요청 데이터: " + e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorMessage("서버 내부 오류: " + e.getMessage()));
         }
     }
 }
