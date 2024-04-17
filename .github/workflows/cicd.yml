@@ -55,27 +55,23 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew build
 
-      - name: Setup GCP Auth
-        uses: 'google-github-actions/auth@v2'
+      - name: Docker build
+        run: |
+          echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login -u ${{ secrets.DOCKERHUB_EMAIL }} --password-stdin
+          docker build -t ${{ secrets.DOCKERHUB_REPOSITORY }} .
+          docker tag ${{ secrets.DOCKERHUB_REPOSITORY }} ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:${{github.sha}}
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:${{github.sha}}
+
+      - name: Deploy
+        uses: appleboy/ssh-action@master
         with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Set up Cloud SDK
-        uses: 'google-github-actions/setup-gcloud@v2'
-
-      - name: Configure Dockern
-        run: gcloud auth configure-docker asia-northeast3-docker.pkg.dev
-
-      - name: Build and push Docker image to GCP Artifact Registry with cache
-        run: |
-          docker buildx create --use
-          docker buildx build --push --tag ${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }} \
-            --cache-from=type=registry,ref=${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:cache \
-            --cache-to=type=inline \
-            .
-
-      - name: Deploy to GCE instance
-        run: |
-          gcloud compute instances update-container "tfinder-vm" \
-            --zone "asia-northeast3-a" \
-            --container-image "${{ secrets.GCP_ARTIFACT_REGISTRY }}/tfinder:${{ github.sha }}"
+          host: 34.64.155.181
+          username: Icecoff22
+          key: ${{ secrets.UBUNTU_SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            echo ${{ secrets.DOCKERHUB_PASSWORD }} | sudo docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:${{github.sha}}
+            sudo docker tag ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:${{github.sha}} tfinder_server
+            sudo docker-compose down
+            sudo docker-compose up -d
