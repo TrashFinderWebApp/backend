@@ -64,7 +64,7 @@ public class SecurityConfig {
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring().requestMatchers(
                 "/", "/oauth2**",
-                "/swagger-ui/**", "/api-docs/**", "/api/trashcan/**"); //swagger, 쓰레기통 데이터 들어갔는지 확인을 위한 임시 설정
+                "/swagger-ui/**", "/api-docs/**"); //swagger
     }
 
     //cors 설정
@@ -77,6 +77,7 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 
