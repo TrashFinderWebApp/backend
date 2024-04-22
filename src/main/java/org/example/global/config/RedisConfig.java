@@ -6,9 +6,9 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 
 public class RedisConfig {
-    @Value("${jwt.redis.host}")
+    @Value("${spring.redis.host}")
     private String host;
-    @Value("${jwt.redis.port}")
+    @Value("${spring.redis.port}")
     private int port;
 
     @Bean
