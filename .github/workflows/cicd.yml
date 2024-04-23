@@ -15,12 +15,6 @@ jobs:
   ci-cd:
     runs-on: ubuntu-latest
 
-    services:
-      redis:
-        image: redis:latest
-        ports:
-          - 6379:6379
-
     steps:
       - uses: actions/checkout@v3
         with:
@@ -72,6 +66,6 @@ jobs:
           script: |
             echo ${{ secrets.DOCKERHUB_PASSWORD }} | sudo docker login -u ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:${{github.sha}}
-            sudo docker tag ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:${{github.sha}} tfinder_server
+            sudo docker tag ${{ secrets.DOCKERHUB_USERNAME }}/${{ secrets.DOCKERHUB_REPOSITORY }}:${{github.sha}} tfinder-server
             sudo docker-compose down
             sudo docker-compose up -d
