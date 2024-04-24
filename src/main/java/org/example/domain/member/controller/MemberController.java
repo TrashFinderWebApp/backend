@@ -50,6 +50,7 @@ public class MemberController {
         if (isDuplicated(request.getEmail())) {
             return new ResponseEntity<>(new ErrorMessage("이메일 중복입니다. 다시 입력해주세요."), HttpStatus.BAD_REQUEST);
         }
+
         memberService.userSignUp(request);
         return new ResponseEntity<>(HttpStatus.OK);
     }
