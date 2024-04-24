@@ -29,7 +29,7 @@ import org.springframework.beans.factory.annotation.Value;
 @Service
 @RequiredArgsConstructor
 public class MemberService {
-    private static final String AUTH_CODE_PREFIX = "AuthCode ";
+    private static final String AUTH_CODE_PREFIX = "AuthCode";
 
     private final MemberRepository memberRepository;
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
@@ -102,7 +102,7 @@ public class MemberService {
 
     public EmailVerificationResult verifiedCode(String email, String authCode) {
         String redisAuthCode = redisService.getValues(AUTH_CODE_PREFIX + email);
-        boolean authResult = redisService.checkExistsValue(redisAuthCode) && redisAuthCode.equals(authCode);
+        boolean authResult = redisService.checkExistsValue(AUTH_CODE_PREFIX + email) && redisAuthCode.equals(authCode);
 
         return EmailVerificationResult.of(authResult);
     }
