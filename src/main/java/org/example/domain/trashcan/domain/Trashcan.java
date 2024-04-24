@@ -38,4 +38,8 @@ public class Trashcan {
 
     @Column(nullable = false)
     private Integer views = 0;
+
+    public void increaseViews(){
+        this.views += 1;
+    }
 }
