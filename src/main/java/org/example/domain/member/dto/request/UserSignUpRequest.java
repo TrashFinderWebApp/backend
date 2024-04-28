@@ -28,4 +28,7 @@ public class UserSignUpRequest {
     @Size(max = 10)
     private String name;
 
+    @NotBlank(message = "이메일을 인증하세요.")
+    private String authCode;
+
 }
