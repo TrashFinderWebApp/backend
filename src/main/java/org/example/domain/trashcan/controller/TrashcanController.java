@@ -164,8 +164,8 @@ public class TrashcanController {
             HttpServletRequest request,
             @RequestParam("latitude") double latitude,
             @RequestParam("longitude") double longitude,
-            @RequestParam("address_detail") String addressDetail,
-            @RequestParam("address") String address,
+            @RequestParam(value = "address_detail", required = false) String addressDetail,
+            @RequestParam(value = "address", required = false) String address,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "image_object", required = false) List<MultipartFile> imageObjects){
         try {
@@ -222,8 +222,8 @@ public class TrashcanController {
             HttpServletRequest request,
             @RequestParam("latitude") double latitude,
             @RequestParam("longitude") double longitude,
-            @RequestParam("address_detail") String addressDetail,
-            @RequestParam("address") String address,
+            @RequestParam(value = "address_detail", required = false) String addressDetail,
+            @RequestParam(value = "address", required = false) String address,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "image_object", required = false) List<MultipartFile> imageObjects) {
         try {
