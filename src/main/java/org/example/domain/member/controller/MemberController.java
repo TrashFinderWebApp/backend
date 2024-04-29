@@ -43,13 +43,15 @@ public class MemberController {
                     content = @Content(schema = @Schema(implementation = AccessTokenResponse.class)),
                     headers = @Header(name = "refreshToken", description = "리프레시 토큰, http-only설정, 헤더 속 쿠키로 반환")),
             @ApiResponse(responseCode = "400", description = "1. 이메일 중복 \t\n 2. 비밀번호 불일치 \t\n "
-                    + "3. 이메일 혹은 비밀번호 형식이 맞지 않습니다. \t\n 4. 이메일, 비밀번호, 이름이 비어 있습니다.",
+                    + "3. 이메일 혹은 비밀번호 형식이 맞지 않습니다. \t\n 4. 이메일, 비밀번호, 이름이 비어 있습니다. \t\n"
+                    + "5. 인증 코드가 잘못 되었습니다.",
             content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public ResponseEntity<?> userSignUp(@Valid @RequestBody UserSignUpRequest request) {
-        EmailVerificationResult verificationResult = memberService.verifiedCode(request.getEmail(), request.getAuthCode());
-        if (!verificationResult.isSuccess()) {
-            return new ResponseEntity<>(new ErrorMessage("인증 코드가 유효하지 않습니다. 다시 확인해주세요."), HttpStatus.BAD_REQUEST);
+        try{
+            EmailVerificationResult verificationResult = memberService.verifiedCode(request.getEmail(), request.getAuthCode());
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(new ErrorMessage(e.getMessage()), HttpStatus.BAD_REQUEST);
         }
         if (isNotMatchedPassword(request)) {
             return new ResponseEntity<>(new ErrorMessage("비밀번호가 일치하지 않습니다. 다시 입력해주세요."), HttpStatus.BAD_REQUEST);
@@ -89,15 +91,14 @@ public class MemberController {
     })
     public ResponseEntity<?> verificationEmail(@RequestParam("email") @Valid @Email String email,
             @RequestParam("code") String authCode) {
-        EmailVerificationResult response = memberService.verifiedCode(email, authCode);
 
-        if(response.isSuccess()) {
-            return ResponseEntity.ok().body(response);
-        } else {
-            return ResponseEntity.badRequest().body(response);
+        try{
+            EmailVerificationResult response = memberService.verifiedCode(email, authCode);
+            return new ResponseEntity<>(HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ErrorMessage(e.getMessage()));
         }
     }
-
 
     @PostMapping("/signin")
     @Operation(summary = "유저 로그인", description = "서비스 내 로그인 API")

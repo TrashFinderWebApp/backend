@@ -4,6 +4,7 @@ package org.example.global.security;
 import java.util.Arrays;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.example.domain.member.type.RoleType;
 import org.example.global.security.filter.JwtAuthenticationFilter;
 import org.example.global.security.jwt.JwtProvider;
 import org.springframework.context.annotation.Bean;
@@ -42,15 +43,12 @@ public class SecurityConfig {
 
         /* 권한에 대한 접근 */
         http.authorizeHttpRequests(authorization -> {
-            /*authorization
-                    .requestMatchers("/", "/login", "/signup").permitAll()
-                    .requestMatchers("/admin").hasAuthority(ADMIN.getValue())
-                    .requestMatchers("/user").has*/
-
-            /* 우선적으로 모든 인증 요청에 대해 권한 허용, 이후 인증자만 접근 가능. 추후 세부 수정 예정 */
             authorization
-                    .requestMatchers("/**").permitAll()
-                    .anyRequest().authenticated();
+                    .requestMatchers("/api/trashcan/registrations/**", "/api/trashcan/suggestions/**")
+                    .hasAnyRole(RoleType.USER.name())
+                    .requestMatchers("/admin")
+                    .hasAnyRole(RoleType.ADMIN.name())
+                    .anyRequest().permitAll();
         });
 
         http
