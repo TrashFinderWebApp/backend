@@ -164,10 +164,10 @@ public class TrashcanController {
             HttpServletRequest request,
             @RequestParam("latitude") double latitude,
             @RequestParam("longitude") double longitude,
-            @RequestParam("address_detail") String addressDetail,
-            @RequestParam("address") String address,
-            @RequestParam("description") String description,
-            @RequestParam("image_object") List<MultipartFile> imageObjects){
+            @RequestParam(value = "address_detail", required = false) String addressDetail,
+            @RequestParam(value = "address", required = false) String address,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "image_object", required = false) List<MultipartFile> imageObjects){
         try {
             String token = jwtProvider.resolveAccessToken(request);
 
@@ -200,8 +200,8 @@ public class TrashcanController {
     public ResponseEntity<?> registerTrashcanId(
             @PathVariable("id") Long trashcanId,
             HttpServletRequest request,
-            @RequestParam("image_object") List<MultipartFile> imageObjects,
-            @RequestParam("description") String description) {
+            @RequestParam(value = "image_object", required = false) List<MultipartFile> imageObjects,
+            @RequestParam(value = "description", required = false) String description) {
         try {
             String token = jwtProvider.resolveAccessToken(request);
             trashcanService.registerTrashcanId(trashcanId, imageObjects, description, token);
@@ -222,10 +222,10 @@ public class TrashcanController {
             HttpServletRequest request,
             @RequestParam("latitude") double latitude,
             @RequestParam("longitude") double longitude,
-            @RequestParam("address_detail") String addressDetail,
-            @RequestParam("address") String address,
-            @RequestParam("description") String description,
-            @RequestParam("image_object") List<MultipartFile> imageObjects) {
+            @RequestParam(value = "address_detail", required = false) String addressDetail,
+            @RequestParam(value = "address", required = false) String address,
+            @RequestParam(value = "description", required = false) String description,
+            @RequestParam(value = "image_object", required = false) List<MultipartFile> imageObjects) {
         try {
             String token = jwtProvider.resolveAccessToken((HttpServletRequest) request);
 
@@ -258,8 +258,8 @@ public class TrashcanController {
     public ResponseEntity<?> suggestTrashcanId(
             @PathVariable("id") Long trashcanId,
             HttpServletRequest request,
-            @RequestParam("image_object") List<MultipartFile> imageObjects,
-            @RequestParam("description") String description) {
+            @RequestParam(value = "image_object", required = false) List<MultipartFile> imageObjects,
+            @RequestParam(value = "description", required = false) String description) {
         try {
             String token = jwtProvider.resolveAccessToken(request);
             trashcanService.suggestTrashcanId(trashcanId, imageObjects, description, token);
