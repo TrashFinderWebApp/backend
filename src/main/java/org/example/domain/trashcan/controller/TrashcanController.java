@@ -2,6 +2,8 @@ package org.example.domain.trashcan.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -160,6 +162,7 @@ public class TrashcanController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "쓰레기통 위치 등록 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TrashcanMessageResponse.class))),
     })
+    @Parameter(name = "access token", in = ParameterIn.HEADER)
     public ResponseEntity<?> registerTrashcan(
             HttpServletRequest request,
             @RequestParam("latitude") double latitude,
@@ -197,6 +200,7 @@ public class TrashcanController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터", content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content(mediaType = "application/json"))
     })
+    @Parameter(name = "access token", in = ParameterIn.HEADER)
     public ResponseEntity<?> registerTrashcanId(
             @PathVariable("id") Long trashcanId,
             HttpServletRequest request,
@@ -218,6 +222,7 @@ public class TrashcanController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "쓰레기통 위치 제안 성공", content = @Content(mediaType = "application/json", schema = @Schema(implementation = TrashcanMessageResponse.class))),
     })
+    @Parameter(name = "access token", in = ParameterIn.HEADER)
     public ResponseEntity<?> suggestTrashcan(
             HttpServletRequest request,
             @RequestParam("latitude") double latitude,
@@ -255,6 +260,7 @@ public class TrashcanController {
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터", content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "500", description = "서버 내부 오류", content = @Content(mediaType = "application/json"))
     })
+    @Parameter(name = "access token", in = ParameterIn.HEADER)
     public ResponseEntity<?> suggestTrashcanId(
             @PathVariable("id") Long trashcanId,
             HttpServletRequest request,
