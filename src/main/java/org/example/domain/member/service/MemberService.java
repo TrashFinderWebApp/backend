@@ -102,7 +102,7 @@ public class MemberService {
 
     public EmailVerificationResult verifiedCode(String email, String authCode) {
         if (redisService.checkExistsValue(AUTH_CODE_PREFIX + email)) {
-            boolean authResult = redisService.getValues(AUTH_CODE_PREFIX + email).equals(authCode)
+            boolean authResult = redisService.getValues(AUTH_CODE_PREFIX + email).equals(authCode);
             if(authResult){
                 throw new IllegalArgumentException("not equal");
             }
