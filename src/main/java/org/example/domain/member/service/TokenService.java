@@ -11,8 +11,10 @@ import org.example.domain.member.dto.response.TokenInfo;
 import org.example.global.security.jwt.JwtProvider;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
+@Service
 public class TokenService {
     private final RefreshTokenService refreshTokenService;
     private final MemberService memberService;
@@ -20,7 +22,7 @@ public class TokenService {
 
     public TokenInfo reIssueToken(String refreshToken) {
         Claims claims = jwtProvider.parseClaims(refreshToken);
-        Member member = memberService.findByUserEmail(claims.getSubject());
+        Member member = memberService.findById(claims.getSubject());
         String userPk = member.getId().toString();
 
         RefreshToken findRefreshToken = refreshTokenService.findById(userPk);

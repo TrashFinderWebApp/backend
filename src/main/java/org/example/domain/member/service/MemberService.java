@@ -58,6 +58,12 @@ public class MemberService {
                 .orElseThrow(() -> new IllegalArgumentException("user doesn't find"));
     }
 
+    @Transactional
+    public Member findById(String id) {
+        return memberRepository.findById(Long.valueOf(id))
+                .orElseThrow(() -> new IllegalArgumentException("userPk doesn't find"));
+    }
+
     public TokenInfo userSignIn(UserSignInRequest request) {
         // 1. Login ID/PW 를 기반으로 Authentication 객체 생성
         // 이때 authentication 는 인증 여부를 확인하는 authenticated 값이 false
