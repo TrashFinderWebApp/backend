@@ -39,3 +39,7 @@ out/
 ### .yml
 *.yml
 application.yml
+
+### gcp account
+tfinder-417312-8eda298328e3.json
+*.json
