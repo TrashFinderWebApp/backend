@@ -131,8 +131,15 @@ public class TrashcanService{
     @Transactional
     public Trashcan registerTrashcan(Trashcan trashcan, List<MultipartFile> imageFiles, String description, String accessToken) throws IOException {
         Trashcan savedTrashcan = trashcanRepository.save(trashcan);
-        saveImages(imageFiles, savedTrashcan);
-        saveDescription(description, savedTrashcan);
+
+        if (imageFiles != null && !imageFiles.isEmpty()) {
+            saveImages(imageFiles, savedTrashcan);
+        }
+
+        if (description != null && !description.isEmpty()) {
+            saveDescription(description, savedTrashcan);
+        }
+
 
         Claims claims = jwtProvider.parseClaims(accessToken);
 
@@ -154,11 +161,13 @@ public class TrashcanService{
         Trashcan trashcan = trashcanRepository.findById(trashcanId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 쓰레기통을 찾을 수 없습니다. ID: " + trashcanId));
 
-        // 이미지 정보 저장
-        saveImages(imageFiles, trashcan);
+        if (imageFiles != null && !imageFiles.isEmpty()) {
+            saveImages(imageFiles, trashcan);
+        }
 
-        // 설명 정보 저장
-        saveDescription(description, trashcan);
+        if (description != null && !description.isEmpty()) {
+            saveDescription(description, trashcan);
+        }
 
         //registration 정보 저장
         Claims claims = jwtProvider.parseClaims(accessToken);
@@ -177,8 +186,13 @@ public class TrashcanService{
     @Transactional
     public Trashcan suggestTrashcan(Trashcan trashcan, List<MultipartFile> imageFiles, String description, String accessToken) throws IOException {
         Trashcan savedTrashcan = trashcanRepository.save(trashcan);
-        saveImages(imageFiles, savedTrashcan);
-        saveDescription(description, savedTrashcan);
+        if (imageFiles != null && !imageFiles.isEmpty()) {
+            saveImages(imageFiles, savedTrashcan);
+        }
+
+        if (description != null && !description.isEmpty()) {
+            saveDescription(description, savedTrashcan);
+        }
 
         Claims claims = jwtProvider.parseClaims(accessToken);
         Member member = memberRepository.findById(Long.parseLong(claims.getSubject())).get();
@@ -196,11 +210,13 @@ public class TrashcanService{
         Trashcan trashcan = trashcanRepository.findById(trashcanId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 쓰레기통을 찾을 수 없습니다. ID: " + trashcanId));
 
-        // 이미지 정보 저장
-        saveImages(imageFiles, trashcan);
+        if (imageFiles != null && !imageFiles.isEmpty()) {
+            saveImages(imageFiles, trashcan);
+        }
 
-        // 설명 정보 저장
-        saveDescription(description, trashcan);
+        if (description != null && !description.isEmpty()) {
+            saveDescription(description, trashcan);
+        }
 
         //registration 정보 저장
         Claims claims = jwtProvider.parseClaims(accessToken);

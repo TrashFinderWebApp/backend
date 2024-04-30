@@ -1,63 +1,68 @@
 package org.example.global.advice;
 
+import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.naming.AuthenticationException;
+import org.example.domain.trashcan.exception.InvalidStatusException;
+import org.example.domain.trashcan.exception.TrashcanNotFoundException;
 import org.example.global.domain.dto.ErrorResponseDto;
+import org.hibernate.TypeMismatchException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 import org.webjars.NotFoundException;
 
-@RestControllerAdvice
+@RestControllerAdvice(basePackages = "org.example.domain.trashcan")
 public class GlobalExceptionHandler {
 
-    // 잘못된 파라미터 값 예외 처리
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ErrorMessage> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
-        ErrorMessage errorMessage = new ErrorMessage("잘못된 파라미터 값입니다: " + e.getName());
+    @ExceptionHandler(InvalidStatusException.class)
+    public ResponseEntity<ErrorMessage> handleInvalidStatusException(InvalidStatusException e) {
+        ErrorMessage errorMessage = new ErrorMessage(e.getMessage());
         return ResponseEntity.badRequest().body(errorMessage);
     }
 
-    // 지원하지 않는 상태 값 예외 처리
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ErrorMessage> handleIllegalArgumentException(IllegalArgumentException e) {
-        ErrorMessage errorMessage = new ErrorMessage("지원하지 않는 상태 값입니다.");
-        return ResponseEntity.badRequest().body(errorMessage);
-    }
-
-    // 데이터베이스 접근 오류 처리
-    @ExceptionHandler(DataAccessException.class)
-    public ResponseEntity<ErrorMessage> handleDataAccessException(DataAccessException e) {
-        ErrorMessage errorMessage = new ErrorMessage("데이터베이스 접근 중 오류가 발생했습니다.");
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMessage);
-    }
-
-    // 데이터 미존재 예외 처리
-    @ExceptionHandler(EmptyResultDataAccessException.class)
-    public ResponseEntity<ErrorMessage> handleEmptyResultDataAccessException(EmptyResultDataAccessException e) {
-        ErrorMessage errorMessage = new ErrorMessage("조건에 맞는 데이터가 없습니다.");
+    @ExceptionHandler(TrashcanNotFoundException.class)
+    public ResponseEntity<ErrorMessage> handleTrashcanNotFoundException(TrashcanNotFoundException e) {
+        ErrorMessage errorMessage = new ErrorMessage(e.getMessage());
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(errorMessage);
     }
 
-    //인증 실패 처리
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ErrorMessage> handleAuthenticationException(AuthenticationException e) {
-        ErrorMessage errorMessage = new ErrorMessage("인증 실패: " + e.getMessage());
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMessage);
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException e) {
+        BindingResult result = e.getBindingResult();
+        List<FieldError> fieldErrors = result.getFieldErrors();
+
+        Map<String, String> errors = new HashMap<>();
+        fieldErrors.forEach(f -> errors.put(f.getField(), f.getDefaultMessage()));
+
+        return ResponseEntity
+                .badRequest()
+                .body(errors);
     }
 
-    // ResponseStatusException 처리
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ErrorMessage> handleResponseStatusException(ResponseStatusException e) {
-        ErrorMessage errorMessage = new ErrorMessage(e.getReason());
-        return new ResponseEntity<>(errorMessage, e.getStatusCode());
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorMessage> handleMissingServletRequestParameter(MissingServletRequestParameterException ex) {
+        String message = String.format("필수 파라미터 '%s' (%s)이(가) 누락되었습니다.", ex.getParameterName(), ex.getParameterType());
+        ErrorMessage errorMessage = new ErrorMessage(message);
+        return ResponseEntity.badRequest().body(errorMessage);
+    }
+
+    @ExceptionHandler(TypeMismatchException.class)
+    public ResponseEntity<ErrorMessage> handleTypeMismatchException(TypeMismatchException ex, WebRequest request) {
+        ErrorMessage errorMessage = new ErrorMessage("잘못된 파라미터 형식입니다.");
+        return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
     }
 }

@@ -22,6 +22,8 @@ import org.example.domain.trashcan.dto.request.TrashcanLocationRequest;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsResponse;
 import org.example.domain.trashcan.dto.response.TrashcanLocationResponse;
 import org.example.domain.trashcan.dto.response.TrashcanMessageResponse;
+import org.example.domain.trashcan.exception.InvalidStatusException;
+import org.example.domain.trashcan.exception.TrashcanNotFoundException;
 import org.example.domain.trashcan.service.TrashcanService;
 import org.example.global.advice.ErrorMessage;
 import org.example.global.security.jwt.JwtProvider;
@@ -69,14 +71,12 @@ public class TrashcanController {
     public ResponseEntity<?> getTrashcanLocations(@ModelAttribute TrashcanLocationRequest requestDto) {
         List<String> validStatuses = Arrays.asList("added", "registered", "suggested", "removed");
         if (!validStatuses.contains(requestDto.getStatus())) {
-            ErrorMessage errorMessage = new ErrorMessage("유효하지 않은 status 값입니다.");
-            return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST); // BAD_REQUEST와 함께 ErrorMessage 반환
+            throw new InvalidStatusException("유효하지 않은 status 값입니다.");
         }
 
         List<Trashcan> trashcans = trashcanService.findTrashcansNear(requestDto.getLatitude(), requestDto.getLongitude(), requestDto.getRadius(), requestDto.getStatus());
         if (trashcans.isEmpty()) {
-            ErrorMessage errorMessage = new ErrorMessage("해당 조건에 맞는 쓰레기통이 존재하지 않습니다.");
-            return new ResponseEntity<>(errorMessage, HttpStatus.NOT_FOUND); // NOT_FOUND와 함께 ErrorMessage 반환
+            throw new TrashcanNotFoundException("해당 조건에 맞는 쓰레기통이 존재하지 않습니다.");
         }
 
         List<TrashcanLocationResponse> responseList = new ArrayList<>();
@@ -116,16 +116,11 @@ public class TrashcanController {
                             schema = @Schema(implementation = ErrorMessage.class)))
     })
     public ResponseEntity<?> getTrashcanDetails(@PathVariable("id") Long id) {
-        Optional<Trashcan> trashcanOptional = trashcanService.getTrashcanDetails(id);
-
-        if (!trashcanOptional.isPresent()) {
-            ErrorMessage errorMessage = new ErrorMessage("쓰레기통 정보를 찾을 수 없음");
-            return new ResponseEntity<>(errorMessage, HttpStatus.NOT_FOUND); // 직접 ResponseEntity를 반환
-        }
+        Trashcan trashcan = trashcanService.getTrashcanDetails(id)
+                .orElseThrow(() -> new TrashcanNotFoundException("쓰레기통 정보를 찾을 수 없음"));
 
         trashcanService.increaseTrashcanViews(id);
 
-        Trashcan trashcan = trashcanOptional.get();
         List<String> images = trashcanService.getImagesByTrashcanId(id).stream()
                 .map(Image::getImage)
                 .collect(Collectors.toList());
@@ -238,7 +233,7 @@ public class TrashcanController {
             trashcan.setStatus("suggested");
 
             Trashcan suggestedTrashcan = trashcanService.suggestTrashcan(trashcan, imageObjects, description, token);
-            return new ResponseEntity<>(new TrashcanMessageResponse("Location registered successfully."), HttpStatus.CREATED);
+            return new ResponseEntity<>(new TrashcanMessageResponse("Location suggested successfully."), HttpStatus.CREATED);
         } catch (IOException e) {
             ErrorMessage errorMessage = new ErrorMessage("Invalid request data.");
             return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
