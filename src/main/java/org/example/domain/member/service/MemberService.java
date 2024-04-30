@@ -101,7 +101,7 @@ public class MemberService {
             }
             return builder.toString();
         } catch (NoSuchAlgorithmException e) {
-            log.debug("MemberService.createCode() exception occur");
+            log.error("MemberService.createCode() exception occur");
             throw new IllegalStateException("No such algorithm available for code generation.");
         }
     }
@@ -110,10 +110,12 @@ public class MemberService {
         if (redisService.checkExistsValue(AUTH_CODE_PREFIX + email)) {
             boolean authResult = redisService.getValues(AUTH_CODE_PREFIX + email).equals(authCode);
             if(!authResult){
+                log.error("not equal email verified code.");
                 throw new IllegalArgumentException("not equal");
             }
             return EmailVerificationResult.of(authResult);
         }
+        log.error("don't exist auth code.");
         throw new IllegalArgumentException("don't exist auth code.");
     }
 }

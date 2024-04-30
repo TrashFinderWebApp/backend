@@ -3,6 +3,7 @@ package org.example.domain.member.service;
 import io.jsonwebtoken.Claims;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.domain.auth.token.RefreshToken;
 import org.example.domain.auth.token.RefreshTokenRepository;
 import org.example.domain.auth.token.RefreshTokenService;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 @RequiredArgsConstructor
 @Service
+@Slf4j
 public class TokenService {
     private final RefreshTokenService refreshTokenService;
     private final MemberService memberService;
@@ -32,6 +34,7 @@ public class TokenService {
         }
 
         refreshTokenService.deleteById(userPk);
+        log.error("리프레시 토큰이 일치하지 않아요.");
         throw new IllegalArgumentException("리프레시 토큰이 일치하지 않아요.");
     }
 }
