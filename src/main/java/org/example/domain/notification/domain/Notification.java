@@ -34,4 +34,11 @@ public class Notification extends BaseTimeEntity {
 
     @Column(name = "state", nullable = false)
     private NotificationType state;
+
+    public Notification(String title, String description, NotificationType type) {
+        this.title = title;
+        this.description = description;
+        this.state = type;
+    }
+
 }

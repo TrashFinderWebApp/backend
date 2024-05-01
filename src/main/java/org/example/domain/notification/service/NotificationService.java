@@ -4,10 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.domain.notification.controller.dto.NotificationListResponseAll;
+import org.example.domain.notification.controller.dto.request.CreateNotificationRequest;
+import org.example.domain.notification.controller.dto.response.NotificationListResponseAll;
 import org.example.domain.notification.domain.Notification;
 import org.example.domain.notification.domain.NotificationType;
 import org.example.domain.notification.repository.NotificationRepository;
+import org.example.global.security.jwt.JwtProvider;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,6 +17,16 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class NotificationService {
     private final NotificationRepository notificationRepository;
+    private final JwtProvider jwtProvider;
+
+    public void createNotification(CreateNotificationRequest notificationRequest) {
+        notificationRepository.save(
+                new Notification(
+                        notificationRequest.getTitle(),
+                        notificationRequest.getDescription(),
+                        NotificationType.valueOf(notificationRequest.getState())
+                ));
+    }
 
     public List<NotificationListResponseAll> getAllNotificationList() {
         List<Notification> responseData = notificationRepository.findAllByOrderByCreatedAtDesc();

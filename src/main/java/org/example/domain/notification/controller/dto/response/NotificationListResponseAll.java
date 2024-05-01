@@ -1,4 +1,4 @@
-package org.example.domain.notification.controller.dto;
+package org.example.domain.notification.controller.dto.response;
 
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
