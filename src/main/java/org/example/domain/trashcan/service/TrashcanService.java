@@ -22,6 +22,7 @@ import org.example.domain.trashcan.domain.Image;
 import org.example.domain.trashcan.domain.Registration;
 import org.example.domain.trashcan.domain.Suggestion;
 import org.example.domain.trashcan.domain.Trashcan;
+import org.example.domain.trashcan.dto.response.TrashcanAllResponse;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsResponse;
 import org.example.domain.trashcan.repository.DescriptionRepository;
 import org.example.domain.trashcan.repository.ImageRepository;
@@ -265,20 +266,21 @@ public class TrashcanService{
     }
 
 
-    public List<TrashcanDetailsResponse> getTrashcanDetailsByMemberId(Long memberId) {
+    public List<TrashcanAllResponse> getTrashcanDetailsByMemberId(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
 
         List<Trashcan> registeredTrashcans = registrationRepository.findByMemberId(memberId).stream().map(Registration::getTrashcan).collect(Collectors.toList());
         List<Trashcan> suggestedTrashcans = suggestionRepository.findByMemberId(memberId).stream().map(Suggestion::getTrashcan).collect(Collectors.toList());
-        List<TrashcanDetailsResponse> responses = new ArrayList<>();
+        List<TrashcanAllResponse> responses = new ArrayList<>();
 
         for (Trashcan trashcan : registeredTrashcans) {
             List<String> images = getImagesByTrashcanId(trashcan.getId()).stream().map(Image::getImage).collect(Collectors.toList());
             List<String> descriptions = getDescriptionsByTrashcanId(trashcan.getId()).stream().map(Description::getDescription).collect(Collectors.toList());
             Integer count = 0;
             count = getRegistrationCountForTrashcan(trashcan.getId());
-            TrashcanDetailsResponse response = new TrashcanDetailsResponse(trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), count);
+
+            TrashcanAllResponse response = new TrashcanAllResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), count);
             responses.add(response);
         }
         for (Trashcan trashcan : suggestedTrashcans) {
@@ -286,7 +288,7 @@ public class TrashcanService{
             List<String> descriptions = getDescriptionsByTrashcanId(trashcan.getId()).stream().map(Description::getDescription).collect(Collectors.toList());
             Integer count = 0;
             count = getSuggestionCountForTrashcan(trashcan.getId());
-            TrashcanDetailsResponse response = new TrashcanDetailsResponse(trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), count);
+            TrashcanAllResponse response = new TrashcanAllResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), count);
             responses.add(response);
         }
         return responses;

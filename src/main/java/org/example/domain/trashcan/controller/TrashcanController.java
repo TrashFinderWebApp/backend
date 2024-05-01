@@ -20,6 +20,7 @@ import org.example.domain.trashcan.domain.Description;
 import org.example.domain.trashcan.domain.Image;
 import org.example.domain.trashcan.domain.Trashcan;
 import org.example.domain.trashcan.dto.request.TrashcanLocationRequest;
+import org.example.domain.trashcan.dto.response.TrashcanAllResponse;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsResponse;
 import org.example.domain.trashcan.dto.response.TrashcanLocationResponse;
 import org.example.domain.trashcan.dto.response.TrashcanMessageResponse;
@@ -284,12 +285,12 @@ public class TrashcanController {
             @ApiResponse(responseCode = "200", description = "정보 가져오기 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = TrashcanDetailsResponse.class))
+                            array = @ArraySchema(schema = @Schema(implementation = TrashcanAllResponse.class))
                     )
             ),
     })
-    public ResponseEntity<List<TrashcanDetailsResponse>> getTrashcansDetailsByMemberId(@PathVariable Long memberId) {
-        List<TrashcanDetailsResponse> trashcanDetails = trashcanService.getTrashcanDetailsByMemberId(memberId);
+    public ResponseEntity<List<TrashcanAllResponse>> getTrashcansDetailsByMemberId(@PathVariable Long memberId) {
+        List<TrashcanAllResponse> trashcanDetails = trashcanService.getTrashcanDetailsByMemberId(memberId);
         return ResponseEntity.ok().body(trashcanDetails);
     }
 
