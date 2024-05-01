@@ -12,6 +12,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+import org.example.domain.notification.controller.dto.request.UpdateNotificationRequest;
 import org.example.global.domain.BaseTimeEntity;
 
 @Entity
@@ -39,6 +40,19 @@ public class Notification extends BaseTimeEntity {
         this.title = title;
         this.description = description;
         this.state = type;
+    }
+
+    public void update(UpdateNotificationRequest updateRequest) {
+        if (updateRequest.getTitle() != null) {
+            System.out.println("타이틀 접근");
+            this.title = updateRequest.getTitle();
+        }
+        if (updateRequest.getDescription() != null) {
+            this.description = updateRequest.getDescription();
+        }
+        if (updateRequest.getState() != null) {
+            this.state = NotificationType.valueOf(updateRequest.getState());
+        }
     }
 
 }

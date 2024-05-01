@@ -5,12 +5,14 @@ import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.domain.notification.controller.dto.request.CreateNotificationRequest;
+import org.example.domain.notification.controller.dto.request.UpdateNotificationRequest;
 import org.example.domain.notification.controller.dto.response.NotificationListResponseAll;
 import org.example.domain.notification.domain.Notification;
 import org.example.domain.notification.domain.NotificationType;
 import org.example.domain.notification.repository.NotificationRepository;
 import org.example.global.security.jwt.JwtProvider;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -58,5 +60,13 @@ public class NotificationService {
         }
 
         return allList;
+    }
+
+    @Transactional
+    public void updateNotification(Long id, UpdateNotificationRequest updateRequest) {
+        Notification notification = notificationRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("해당 공지사항을 찾지 못했습니다."));
+        notification.update(updateRequest);
+        //notificationRepository.save(notification);
     }
 }
