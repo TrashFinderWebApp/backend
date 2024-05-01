@@ -44,7 +44,7 @@ public class SecurityConfig {
         /* 권한에 대한 접근 */
         http.authorizeHttpRequests(authorization -> {
             authorization
-                    .requestMatchers("/api/trashcan/registrations/**", "/api/trashcan/suggestions/**")
+                    .requestMatchers("/api/trashcan/registrations/**", "/api/trashcan/suggestions/**", "/api/trashcan/member/**")
                     .hasAnyRole(RoleType.USER.name())
                     .requestMatchers("/admin")
                     .hasAnyRole(RoleType.ADMIN.name())

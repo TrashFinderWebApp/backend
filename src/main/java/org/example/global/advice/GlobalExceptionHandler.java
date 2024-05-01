@@ -1,9 +1,11 @@
 package org.example.global.advice;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import javax.naming.AuthenticationException;
 import org.example.domain.trashcan.exception.InvalidStatusException;
 import org.example.domain.trashcan.exception.TrashcanNotFoundException;
@@ -64,5 +66,21 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorMessage> handleTypeMismatchException(TypeMismatchException ex, WebRequest request) {
         ErrorMessage errorMessage = new ErrorMessage("잘못된 파라미터 형식입니다.");
         return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<?> handleExpiredJwtException(ExpiredJwtException ex) {
+        ErrorMessage errorMessage = new ErrorMessage(
+                "토큰이 만료되어 더 이상 유효하지 않습니다."
+        );
+
+        return new ResponseEntity<>(errorMessage, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ErrorMessage> handleNoSuchElementException(NoSuchElementException e) {
+        ErrorMessage errorMessage = new ErrorMessage(e.getMessage());
+
+        return new ResponseEntity<>(errorMessage, HttpStatus.NOT_FOUND);
     }
 }

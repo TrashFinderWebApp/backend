@@ -26,4 +26,9 @@ public interface TrashcanRepository extends JpaRepository<Trashcan, Long> {
                 ) AS combined_results
                 """, nativeQuery = true)
     List<Trashcan> findWithinDistance(@Param("location") Point location, @Param("radius") double radius, @Param("status") String status);
+
+    @Query(value = "SELECT COUNT(*) FROM trashcan WHERE ST_Equals(location, :location) = true", nativeQuery = true)
+    Long existsByLocation(@Param("location") Point location);
+
+
 }

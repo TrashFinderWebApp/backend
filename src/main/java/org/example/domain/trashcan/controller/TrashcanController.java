@@ -15,6 +15,7 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.domain.trashcan.domain.Description;
 import org.example.domain.trashcan.domain.Image;
 import org.example.domain.trashcan.domain.Trashcan;
@@ -42,6 +43,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+@Slf4j
 @Tag(name = "trashcan", description = "쓰레기통 api")
 @RestController
 @RequiredArgsConstructor
@@ -127,7 +129,7 @@ public class TrashcanController {
         List<String> descriptions = trashcanService.getDescriptionsByTrashcanId(id).stream()
                 .map(Description::getDescription)
                 .collect(Collectors.toList());
-        int count = 0;
+        Integer count = 0;
 
         if (trashcan.getStatus().equals("registered")) {
             count = trashcanService.getRegistrationCountForTrashcan(trashcan.getId());
@@ -164,6 +166,11 @@ public class TrashcanController {
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "image_object", required = false) List<MultipartFile> imageObjects){
         try {
+            boolean isDuplicate = trashcanService.isCoordinateDuplicate(latitude, longitude);
+            if (isDuplicate) {
+                ErrorMessage errorMessage = new ErrorMessage("Duplicate coordinates. A trashcan already exists at this location.");
+                return new ResponseEntity<>(errorMessage, HttpStatus.CONFLICT); // HTTP 409 Conflict
+            }
             String token = jwtProvider.resolveAccessToken(request);
 
             GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
@@ -222,7 +229,12 @@ public class TrashcanController {
             @RequestParam(value = "description", required = false) String description,
             @RequestParam(value = "image_object", required = false) List<MultipartFile> imageObjects) {
         try {
-            String token = jwtProvider.resolveAccessToken((HttpServletRequest) request);
+            boolean isDuplicate = trashcanService.isCoordinateDuplicate(latitude, longitude);
+            if (isDuplicate) {
+                ErrorMessage errorMessage = new ErrorMessage("Duplicate coordinates. A trashcan already exists at this location.");
+                return new ResponseEntity<>(errorMessage, HttpStatus.CONFLICT); // HTTP 409 Conflict
+            }
+            String token = jwtProvider.resolveAccessToken(request);
 
             GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
             Point location = geometryFactory.createPoint(new Coordinate(longitude, latitude));
@@ -265,4 +277,20 @@ public class TrashcanController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new ErrorMessage("서버 내부 오류: " + e.getMessage()));
         }
     }
+
+    @GetMapping("/member/{memberId}")
+    @Operation(summary = "본인이 등록, 위치 제안한 쓰레기통 정보 가져오기", description = "본인이 등록, 위치 제안한 쓰레기통 정보 가져오기")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "정보 가져오기 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = TrashcanDetailsResponse.class))
+                    )
+            ),
+    })
+    public ResponseEntity<List<TrashcanDetailsResponse>> getTrashcansDetailsByMemberId(@PathVariable Long memberId) {
+        List<TrashcanDetailsResponse> trashcanDetails = trashcanService.getTrashcanDetailsByMemberId(memberId);
+        return ResponseEntity.ok().body(trashcanDetails);
+    }
+
 }
