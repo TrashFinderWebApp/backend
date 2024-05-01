@@ -44,7 +44,6 @@ public class Notification extends BaseTimeEntity {
 
     public void update(UpdateNotificationRequest updateRequest) {
         if (updateRequest.getTitle() != null) {
-            System.out.println("타이틀 접근");
             this.title = updateRequest.getTitle();
         }
         if (updateRequest.getDescription() != null) {
