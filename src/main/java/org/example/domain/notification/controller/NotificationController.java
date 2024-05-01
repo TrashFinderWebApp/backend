@@ -18,6 +18,7 @@ import org.example.global.advice.ErrorMessage;
 import org.example.global.security.jwt.JwtProvider;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -77,7 +78,7 @@ public class NotificationController {
         }
     }
 
-    @GetMapping("/list/update")
+    @GetMapping("/list/updated")
     @Operation(summary = "공지사항 업데이트 항목 조회", description = "공지사항 업데이트 항목 조회 API")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공",
@@ -143,7 +144,7 @@ public class NotificationController {
         }
     }
 
-    @PatchMapping("/update/{id}")
+    @PatchMapping("/{id}")
     @Operation(summary = "공지사항 업데이트", description = "공지사항 업데이트 API")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "업데이트 성공"),
@@ -157,6 +158,22 @@ public class NotificationController {
             notificationService.updateNotification(id, updateRequest);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(new ErrorMessage(e.getMessage()), HttpStatus.BAD_REQUEST);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ErrorMessage(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @DeleteMapping("/{id}")
+    @Operation(summary = "공지사항 삭제", description = "공지사항 삭제 API")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "삭제 성공"),
+            @ApiResponse(responseCode = "500", description = "기타 서버 에러",
+                    content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    })
+    public ResponseEntity<?> deleteNotification(@PathVariable("id") Long id) {
+        try {
+            notificationService.deleteNotification(id);
         } catch (Exception e) {
             return new ResponseEntity<>(new ErrorMessage(e.getMessage()), HttpStatus.INTERNAL_SERVER_ERROR);
         }

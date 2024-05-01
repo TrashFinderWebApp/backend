@@ -18,6 +18,7 @@ import org.example.global.security.handler.CustomAuthenticationEntryPoint;
 import org.example.global.security.jwt.JwtProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -57,9 +58,9 @@ public class SecurityConfig {
         http.authorizeHttpRequests(authorization -> {
             authorization
                     .requestMatchers("/api/trashcan/registrations/**", "/api/trashcan/suggestions/**")
-                    .hasAnyRole(RoleType.USER.name())
-                    .requestMatchers("/admin/**", "/api/notification/", "/api/notification/update/**",
-                            "/api/notification/delete/**")
+                    .hasAnyRole(RoleType.USER.name(), RoleType.ADMIN.name())
+                    .requestMatchers("/api/notification/list/**").permitAll()
+                    .requestMatchers("/admin/**", "/api/notification/", "/api/notification/{id}")
                     .hasAnyRole(RoleType.ADMIN.name())
                     .anyRequest().permitAll();
         });
