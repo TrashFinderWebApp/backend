@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 public class NotificationService {
     private final NotificationRepository notificationRepository;
 
-    public List<NotificationListResponseAll> getNotificationList() {
+    public List<NotificationListResponseAll> getAllNotificationList() {
         List<Notification> responseData = notificationRepository.findAllByOrderByCreatedAtDesc();
         List<NotificationListResponseAll> responseAllList = convertToResponseAllList(responseData);
 
@@ -26,9 +26,8 @@ public class NotificationService {
         return responseAllList;
     }
 
-    public List<NotificationListResponseAll> getUpdatedNotificationList() {
-        List<Notification> responseData = notificationRepository.findByStateOrderByCreatedAtDesc(
-                NotificationType.UPDATED);
+    public List<NotificationListResponseAll> getStateNotificationList(NotificationType type) {
+        List<Notification> responseData = notificationRepository.findByStateOrderByCreatedAtDesc(type);
         List<NotificationListResponseAll> responseAllList = convertToResponseAllList(responseData);
 
         if (responseAllList.isEmpty()) {
