@@ -45,4 +45,25 @@ public class NotificationController {
             return new ResponseEntity<>(new ErrorMessage("기타 서버 에러"), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    @GetMapping("/list/update")
+    @Operation(summary = "공지사항 업데이트 조회", description = "공지사항 업데이트 조회 API")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "조회 성공",
+                    content = @Content(schema = @Schema(implementation = NotificationListResponseAll.class))),
+            @ApiResponse(responseCode = "404", description = "업데이트 공지사항이 없습니다.",
+                    content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "500", description = "기타 서버 에러",
+                    content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
+    })
+    public ResponseEntity<?> getUpdatedNotificationList() {
+        try {
+            List<NotificationListResponseAll> responseList = notificationService.getUpdatedNotificationList();
+            return new ResponseEntity<>(responseList, HttpStatus.OK);
+        } catch (IllegalArgumentException e) {
+            return new ResponseEntity<>(new ErrorMessage(e.getMessage()), HttpStatus.NOT_FOUND);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ErrorMessage("기타 서버 에러"), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
 }

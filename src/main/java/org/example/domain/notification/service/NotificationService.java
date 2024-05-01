@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.domain.notification.controller.dto.NotificationListResponseAll;
 import org.example.domain.notification.domain.Notification;
+import org.example.domain.notification.domain.NotificationType;
 import org.example.domain.notification.repository.NotificationRepository;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +18,17 @@ public class NotificationService {
 
     public List<NotificationListResponseAll> getNotificationList() {
         List<Notification> responseData = notificationRepository.findAllByOrderByCreatedAtDesc();
+        List<NotificationListResponseAll> responseAllList = convertToResponseAllList(responseData);
+
+        if (responseAllList.isEmpty()) {
+            throw new IllegalArgumentException("resources not found.");
+        }
+        return responseAllList;
+    }
+
+    public List<NotificationListResponseAll> getUpdatedNotificationList() {
+        List<Notification> responseData = notificationRepository.findByStateOrderByCreatedAtDesc(
+                NotificationType.UPDATED);
         List<NotificationListResponseAll> responseAllList = convertToResponseAllList(responseData);
 
         if (responseAllList.isEmpty()) {
