@@ -1,11 +1,20 @@
 package org.example.global.security;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.example.domain.member.type.RoleType;
+import org.example.global.advice.ErrorMessage;
 import org.example.global.security.filter.JwtAuthenticationFilter;
+import org.example.global.security.handler.CustomAccessDeniedHandler;
+import org.example.global.security.handler.CustomAuthenticationEntryPoint;
 import org.example.global.security.jwt.JwtProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +28,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -30,6 +40,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -51,6 +63,12 @@ public class SecurityConfig {
                     .hasAnyRole(RoleType.ADMIN.name())
                     .anyRequest().permitAll();
         });
+
+        http
+                .exceptionHandling(e -> {
+                    e.accessDeniedHandler(customAccessDeniedHandler);
+                    e.authenticationEntryPoint(customAuthenticationEntryPoint);
+                });
 
         http
                 .addFilterBefore(new JwtAuthenticationFilter(jwtProvider),
