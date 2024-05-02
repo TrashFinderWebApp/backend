@@ -2,6 +2,8 @@ package org.example.domain.trashcan.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -113,7 +115,8 @@ public class TrashcanController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessage.class))),
     })
-    public ResponseEntity<TrashcanMessageResponse> registerTrashcan(
+    @Parameter(name = "access token", in = ParameterIn.HEADER)
+    public ResponseEntity<?> registerTrashcan(
             HttpServletRequest request,
             @RequestParam("latitude") double latitude,
             @RequestParam("longitude") double longitude,
@@ -140,6 +143,7 @@ public class TrashcanController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessage.class))),
     })
+    @Parameter(name = "access token", in = ParameterIn.HEADER)
     public ResponseEntity<?> registerTrashcanId(
             @PathVariable("id") Long trashcanId,
             HttpServletRequest request,
@@ -163,6 +167,7 @@ public class TrashcanController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessage.class))),
     })
+    @Parameter(name = "access token", in = ParameterIn.HEADER)
     public ResponseEntity<?> suggestTrashcan(
             HttpServletRequest request,
             @RequestParam("latitude") double latitude,
@@ -189,6 +194,7 @@ public class TrashcanController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessage.class))),
     })
+    @Parameter(name = "access token", in = ParameterIn.HEADER)
     public ResponseEntity<?> suggestTrashcanId(
             @PathVariable("id") Long trashcanId,
             HttpServletRequest request,
@@ -216,6 +222,7 @@ public class TrashcanController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessage.class))),
     })
+    @Parameter(name = "access token", in = ParameterIn.HEADER)
     public ResponseEntity<List<PersonalTrashcansResponse>> getTrashcansDetailsByMemberId(@PathVariable Long memberId) {
         List<PersonalTrashcansResponse> trashcanDetails = trashcanService.getTrashcanDetailsByMemberId(memberId);
         if (trashcanDetails.isEmpty()) {

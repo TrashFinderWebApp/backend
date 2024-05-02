@@ -19,6 +19,7 @@ public class RankService {
     public List<RankListResponse> getScoreList() {
         List<RankDataResponse> responseData = scoreRepository.findMemberByScoreDescDTO();
         if (responseData == null) {
+            log.error("resources not found");
             throw new IllegalArgumentException("resources not found");
         }
         return convertToRankList(responseData);
