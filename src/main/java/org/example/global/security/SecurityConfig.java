@@ -89,7 +89,8 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://tfinder.store", "http://localhost:3000", "http://localhost:8080/swagger-ui"));
+        configuration.setAllowedOrigins(List.of(
+                "https://tfinder.store", "http://localhost:3000", "http://localhost:8080/swagger-ui", "https://tfinder.vercel.app/"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
