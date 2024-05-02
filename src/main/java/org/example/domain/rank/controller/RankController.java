@@ -33,10 +33,8 @@ public class RankController {
     @GetMapping("/list")
     @Operation(summary = "랭킹 조회", description = "멤버의 점수 순서대로 반환되는 함수.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "점수 부여 성공",
+            @ApiResponse(responseCode = "200", description = "등수 조회 성공",
                     content = @Content(schema = @Schema(implementation = RankListResponse.class))),
-            @ApiResponse(responseCode = "404", description = "아무도 점수를 얻지 못함",
-                    content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public ResponseEntity<?> getRankList(
             @RequestParam(name = "startIndex") Integer startIndex,
@@ -51,8 +49,6 @@ public class RankController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "반환 성공",
                     content = @Content(schema = @Schema(implementation = RankListResponse.class))),
-            @ApiResponse(responseCode = "400", description = "멤버를 찾을 수 없습니다.",
-                    content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
             @ApiResponse(responseCode = "500", description = "기타 서버 에러",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
@@ -62,8 +58,6 @@ public class RankController {
             String userPk = jwtProvider.parseClaims(token).getSubject();
             PersonalRankResponse personalRankResponse = rankService.getPersonalRank(userPk);
             return ResponseEntity.ok(personalRankResponse);
-        } catch (IllegalArgumentException e){
-            return ResponseEntity.badRequest().body(new ErrorMessage(e.getMessage()));
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(new ErrorMessage(e.getMessage()));
         }
