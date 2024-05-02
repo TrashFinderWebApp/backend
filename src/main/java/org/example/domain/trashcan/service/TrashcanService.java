@@ -22,8 +22,14 @@ import org.example.domain.trashcan.domain.Image;
 import org.example.domain.trashcan.domain.Registration;
 import org.example.domain.trashcan.domain.Suggestion;
 import org.example.domain.trashcan.domain.Trashcan;
-import org.example.domain.trashcan.dto.response.TrashcanAllResponse;
+import org.example.domain.trashcan.dto.request.TrashcanLocationRequest;
+import org.example.domain.trashcan.dto.response.PersonalTrashcansResponse;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsResponse;
+import org.example.domain.trashcan.dto.response.TrashcanLocationResponse;
+import org.example.domain.trashcan.dto.response.TrashcanMessageResponse;
+import org.example.domain.trashcan.exception.ImageException;
+import org.example.domain.trashcan.exception.MemberNotFoundException;
+import org.example.domain.trashcan.exception.TrashcanNotFoundException;
 import org.example.domain.trashcan.repository.DescriptionRepository;
 import org.example.domain.trashcan.repository.ImageRepository;
 import org.example.domain.trashcan.repository.RegistrationRepository;
@@ -43,6 +49,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class TrashcanService{
     private final TrashcanRepository trashcanRepository;
@@ -54,39 +61,67 @@ public class TrashcanService{
     private final MemberRepository memberRepository;
     private final MemberService memberService;
 
-    @Transactional
+    @Value("${spring.cloud.gcp.storage.credentials.location}")
+    private String keyFileName;
+
+    @Value("${spring.cloud.gcp.storage.bucket}")
+    private String bucketName;
+
     public List<Trashcan> findTrashcansNear(double latitude, double longitude, double radius, String status) {
         GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
         Point location = geometryFactory.createPoint(new Coordinate(longitude, latitude));
         return trashcanRepository.findWithinDistance(location, radius, status);
     }
 
-    @Transactional
+    public List<TrashcanLocationResponse> findTrashcanLocations(TrashcanLocationRequest requestDto) {
+        List<Trashcan> trashcans = findTrashcansNear(requestDto.getLatitude(), requestDto.getLongitude(), requestDto.getRadius(), requestDto.getStatus());
+
+        List<TrashcanLocationResponse> responseList = new ArrayList<>();
+
+        for (Trashcan trashcan : trashcans) {
+            Integer count = 0;
+
+            if ("registered".equals(requestDto.getStatus())) {
+                count = getRegistrationCountForTrashcan(trashcan.getId());
+            } else if ("suggested".equals(requestDto.getStatus())) {
+                count = getSuggestionCountForTrashcan(trashcan.getId());
+            }
+
+            TrashcanLocationResponse response = new TrashcanLocationResponse(
+                    trashcan.getId(),
+                    trashcan.getLocation().getY(),
+                    trashcan.getLocation().getX(),
+                    trashcan.getAddressDetail(),
+                    trashcan.getViews(),
+                    count
+            );
+
+            responseList.add(response);
+        }
+
+        return responseList;
+    }
+
     public Optional<Trashcan> getTrashcanDetails(Long id) {
         return trashcanRepository.findById(id);
     }
 
-    @Transactional
     public List<Image> getImagesByTrashcanId(Long id) {
         return imageRepository.findByTrashcanId(id);
     }
 
-    @Transactional
     public List<Description> getDescriptionsByTrashcanId(Long id) {
         return descriptionRepository.findByTrashcanId(id);
     }
 
-    @Transactional
     public int getRegistrationCountForTrashcan(Long trashcanId) {
         return registrationRepository.countByTrashcanId(trashcanId);
     }
 
-    @Transactional
     public int getSuggestionCountForTrashcan(Long trashcanId) {
         return suggestionRepository.countByTrashcanId(trashcanId);
     }
 
-    @Transactional
     public void increaseTrashcanViews(Long id){
         Optional<Trashcan> trashcanOptional = trashcanRepository.findById(id);
         trashcanOptional.ifPresent(trashcan -> {
@@ -95,11 +130,37 @@ public class TrashcanService{
         });
     }
 
-    @Value("${spring.cloud.gcp.storage.credentials.location}")
-    private String keyFileName;
+    public TrashcanDetailsResponse getTrashcanDetailsResponse(Long id) {
+        Trashcan trashcan = getTrashcanDetails(id)
+                .orElseThrow(() -> new TrashcanNotFoundException("쓰레기통 정보를 찾을 수 없음"));
 
-    @Value("${spring.cloud.gcp.storage.bucket}")
-    private String bucketName;
+        increaseTrashcanViews(id);
+
+        List<String> images = getImagesByTrashcanId(id).stream()
+                .map(Image::getImage)
+                .collect(Collectors.toList());
+        List<String> descriptions = getDescriptionsByTrashcanId(id).stream()
+                .map(Description::getDescription)
+                .collect(Collectors.toList());
+        Integer count = 0;
+
+        if ("registered".equals(trashcan.getStatus())) {
+            count = getRegistrationCountForTrashcan(trashcan.getId());
+        } else if ("suggested".equals(trashcan.getStatus())) {
+            count = getSuggestionCountForTrashcan(trashcan.getId());
+        }
+
+        return new TrashcanDetailsResponse(
+                trashcan.getId(),
+                trashcan.getAddress(),
+                trashcan.getAddressDetail(),
+                images, // 이미지 URL 리스트
+                descriptions, // 설명 텍스트 리스트
+                trashcan.getViews(),
+                trashcan.getStatus(),
+                count
+        );
+    }
 
     private void saveImages(List<MultipartFile> imageFiles, Trashcan savedTrashcan) throws IOException {
         for (MultipartFile file : imageFiles) {
@@ -141,18 +202,46 @@ public class TrashcanService{
         return count != null && count > 0;
     }
 
-    @Transactional
-    public Trashcan registerTrashcan(Trashcan trashcan, List<MultipartFile> imageFiles, String description, String accessToken) throws IOException {
+    private void associateTrashcanWithUser(String accessToken, Trashcan savedTrashcan) {
+        Claims claims = jwtProvider.parseClaims(accessToken);
+
+        memberRepository.findById(Long.parseLong(claims.getSubject()))
+                .map(member -> {
+                    Registration registration = new Registration();
+                    registration.setMember(member);
+                    registration.setTrashcan(savedTrashcan);
+                    registrationRepository.save(registration);
+                    return registration;
+                }).orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
+    }
+
+    public TrashcanMessageResponse registerTrashcan(double latitude, double longitude, String addressDetail, String address, String description, List<MultipartFile> imageObjects, String accessToken) {
+        if (isCoordinateDuplicate(latitude, longitude)) {
+            throw new IllegalArgumentException("이미 해당 위치에 쓰레기통이 등록되어 있습니다.");
+        }
+
+        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
+        Point location = geometryFactory.createPoint(new Coordinate(longitude, latitude));
+
+        Trashcan trashcan = new Trashcan();
+        trashcan.setLocation(location);
+        trashcan.setAddressDetail(addressDetail);
+        trashcan.setAddress(address);
+        trashcan.setStatus("registered");
+
         Trashcan savedTrashcan = trashcanRepository.save(trashcan);
 
-        if (imageFiles != null && !imageFiles.isEmpty()) {
-            saveImages(imageFiles, savedTrashcan);
+        if (imageObjects != null && !imageObjects.isEmpty()) {
+            try {
+                saveImages(imageObjects, trashcan);
+            } catch (IOException e) {
+                throw new ImageException("이미지 저장 중 오류가 발생하였습니다.");
+            }
         }
 
         if (description != null && !description.isEmpty()) {
             saveDescription(description, savedTrashcan);
         }
-
 
         Claims claims = jwtProvider.parseClaims(accessToken);
 
@@ -160,16 +249,15 @@ public class TrashcanService{
                 .map(member -> {
                     Registration registration = new Registration();
                     registration.setMember(member);
-                    registration.setTrashcan(trashcan);
+                    registration.setTrashcan(savedTrashcan);
                     registrationRepository.save(registration);
                     return registration;
                 }).orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
 
-        return savedTrashcan;
+        return new TrashcanMessageResponse("쓰레기통 위치가 성공적으로 등록되었습니다.");
     }
 
-    @Transactional
-    public void registerTrashcanId(Long trashcanId, List<MultipartFile> imageFiles, String description, String accessToken) throws IOException {
+    public void registerTrashcanId(Long trashcanId, List<MultipartFile> imageFiles, String description, String accessToken) {
         // 쓰레기통 ID로 쓰레기통 엔티티 조회
         Trashcan trashcan = trashcanRepository.findById(trashcanId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 쓰레기통을 찾을 수 없습니다. ID: " + trashcanId));
@@ -184,13 +272,16 @@ public class TrashcanService{
         // 중복 등록 검사
         List<Registration> registrations = registrationRepository.findByMemberAndTrashcan(member, trashcan);
         log.info("findByMemberAndTrashcan 결과 개수: {}", registrations.size());
-        boolean isAlreadyRegistered = !registrations.isEmpty();
-        if (isAlreadyRegistered) {
+        if (!registrations.isEmpty()) {
             throw new IllegalStateException("이미 해당 쓰레기통에 등록된 정보가 있습니다.");
         }
 
         if (imageFiles != null && !imageFiles.isEmpty()) {
-            saveImages(imageFiles, trashcan);
+            try {
+                saveImages(imageFiles, trashcan);
+            } catch (IOException e) {
+                throw new ImageException("이미지 저장 중 오류가 발생하였습니다.");
+            }
         }
 
         if (description != null && !description.isEmpty()) {
@@ -204,11 +295,28 @@ public class TrashcanService{
         registrationRepository.save(registration);
     }
 
-    @Transactional
-    public Trashcan suggestTrashcan(Trashcan trashcan, List<MultipartFile> imageFiles, String description, String accessToken) throws IOException {
+    public TrashcanMessageResponse suggestTrashcan(double latitude, double longitude, String addressDetail, String address, String description, List<MultipartFile> imageObjects, String accessToken) {
+        if (isCoordinateDuplicate(latitude, longitude)) {
+            throw new IllegalArgumentException("이미 해당 위치에 쓰레기통이 등록되어 있습니다.");
+        }
+
+        GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
+        Point location = geometryFactory.createPoint(new Coordinate(longitude, latitude));
+
+        Trashcan trashcan = new Trashcan();
+        trashcan.setLocation(location);
+        trashcan.setAddressDetail(addressDetail);
+        trashcan.setAddress(address);
+        trashcan.setStatus("suggested");
+
         Trashcan savedTrashcan = trashcanRepository.save(trashcan);
-        if (imageFiles != null && !imageFiles.isEmpty()) {
-            saveImages(imageFiles, savedTrashcan);
+
+        if (imageObjects != null && !imageObjects.isEmpty()) {
+            try {
+                saveImages(imageObjects, savedTrashcan);
+            } catch (IOException e) {
+                throw new ImageException("이미지 저장 중 오류가 발생하였습니다.");
+            }
         }
 
         if (description != null && !description.isEmpty()) {
@@ -225,11 +333,10 @@ public class TrashcanService{
                     return suggestion;
                 }).orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
 
-        return savedTrashcan;
+        return new TrashcanMessageResponse("쓰레기통 위치가 성공적으로 제안되었습니다.");
     }
 
-    @Transactional
-    public void suggestTrashcanId(Long trashcanId, List<MultipartFile> imageFiles, String description, String accessToken) throws IOException {
+    public void suggestTrashcanId(Long trashcanId, List<MultipartFile> imageFiles, String description, String accessToken) {
         // 쓰레기통 ID로 쓰레기통 엔티티 조회
         Trashcan trashcan = trashcanRepository.findById(trashcanId)
                 .orElseThrow(() -> new IllegalArgumentException("해당 쓰레기통을 찾을 수 없습니다. ID: " + trashcanId));
@@ -251,7 +358,11 @@ public class TrashcanService{
         }
 
         if (imageFiles != null && !imageFiles.isEmpty()) {
-            saveImages(imageFiles, trashcan);
+            try {
+                saveImages(imageFiles, trashcan);
+            } catch (IOException e) {
+                throw new ImageException("이미지 저장 중 오류가 발생하였습니다.");
+            }
         }
 
         if (description != null && !description.isEmpty()) {
@@ -266,13 +377,13 @@ public class TrashcanService{
     }
 
 
-    public List<TrashcanAllResponse> getTrashcanDetailsByMemberId(Long memberId) {
+    public List<PersonalTrashcansResponse> getTrashcanDetailsByMemberId(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
 
         List<Trashcan> registeredTrashcans = registrationRepository.findByMemberId(memberId).stream().map(Registration::getTrashcan).collect(Collectors.toList());
         List<Trashcan> suggestedTrashcans = suggestionRepository.findByMemberId(memberId).stream().map(Suggestion::getTrashcan).collect(Collectors.toList());
-        List<TrashcanAllResponse> responses = new ArrayList<>();
+        List<PersonalTrashcansResponse> responses = new ArrayList<>();
 
         for (Trashcan trashcan : registeredTrashcans) {
             List<String> images = getImagesByTrashcanId(trashcan.getId()).stream().map(Image::getImage).collect(Collectors.toList());
@@ -280,7 +391,7 @@ public class TrashcanService{
             Integer count = 0;
             count = getRegistrationCountForTrashcan(trashcan.getId());
 
-            TrashcanAllResponse response = new TrashcanAllResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), count);
+            PersonalTrashcansResponse response = new PersonalTrashcansResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), count);
             responses.add(response);
         }
         for (Trashcan trashcan : suggestedTrashcans) {
@@ -288,7 +399,7 @@ public class TrashcanService{
             List<String> descriptions = getDescriptionsByTrashcanId(trashcan.getId()).stream().map(Description::getDescription).collect(Collectors.toList());
             Integer count = 0;
             count = getSuggestionCountForTrashcan(trashcan.getId());
-            TrashcanAllResponse response = new TrashcanAllResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), count);
+            PersonalTrashcansResponse response = new PersonalTrashcansResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), count);
             responses.add(response);
         }
         return responses;
