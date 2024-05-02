@@ -33,7 +33,7 @@ public class Oauth2Controller {
 
 
     @PostMapping("/login")
-    @Operation(summary = "유저 소셜 로그인", description = "소셜 로그인 API")
+    @Operation(summary = "유저 소셜 로그인", description = "소셜 로그인 API, jwt 만료 시간은 unix timestamp형태")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "로그인 성공",
             content = @Content(schema = @Schema(implementation = AccessTokenResponse.class)),
@@ -58,9 +58,9 @@ public class Oauth2Controller {
             cookie.setHttpOnly(true);//XSS 예방
 
             response.addCookie(cookie);
-            String accessToken = tokenInfo.getAccessToken();
 
-            return new ResponseEntity<>(new AccessTokenResponse(accessToken), HttpStatus.OK);
+            return new ResponseEntity<>(new AccessTokenResponse(
+                    tokenInfo.getAccessToken(), tokenInfo.getExpiredTime()), HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(new ErrorMessage(e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
         }

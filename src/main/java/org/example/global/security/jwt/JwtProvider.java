@@ -55,11 +55,14 @@ public class JwtProvider {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
     public TokenInfo createToken(String userPk, String roles){
+
+        long jwtExpiredUnixTime = System.currentTimeMillis() + 1000 * 60 * 30;
+
         String accessToken = Jwts.builder()
                 .setSubject(userPk)
                 .claim(AUTHORITIES_KEY, roles)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30))//30분 유효기간
+                .setExpiration(new Date(jwtExpiredUnixTime))//30분 유효기간
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
@@ -72,7 +75,7 @@ public class JwtProvider {
 
         refreshTokenService.saveTokenInfo(userPk, refreshToken);
 
-        return new TokenInfo(accessToken, refreshToken);
+        return new TokenInfo(accessToken, refreshToken, jwtExpiredUnixTime);
     }
 
     //JWT 토큰을 복호화하여 토큰에 들어있는 정보를 꺼내는 메서드

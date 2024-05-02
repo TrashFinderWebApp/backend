@@ -36,7 +36,7 @@ public class TokenController {
     @GetMapping("/reissue")
     @Operation(summary = "토큰 재발급", description = "토큰 재발급 API")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "로그인 성공",
+            @ApiResponse(responseCode = "200", description = "재발급 성공, jwt 만료 시간은 unix timestamp형태",
                     content = @Content(schema = @Schema(implementation = AccessTokenResponse.class)),
                     headers = @Header(name = "refresh Token", description = "리프레시 토큰, http-only설정, 헤더 속 쿠키로 반환")),
             @ApiResponse(responseCode = "401", description = "1. 헤더에 refresh token이 없을 때\t\n 2. refresh token이 일치하지 않을 때",
@@ -60,9 +60,9 @@ public class TokenController {
             cookie.setHttpOnly(true);
 
             response.addCookie(cookie);
-            String accessToken = tokenInfo.getAccessToken();
 
-            return new ResponseEntity<>(new AccessTokenResponse(accessToken), HttpStatus.OK);
+            return new ResponseEntity<>(new AccessTokenResponse(
+                    tokenInfo.getAccessToken(), tokenInfo.getExpiredTime()), HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(new ErrorMessage(e.getMessage()),HttpStatus.UNAUTHORIZED);
         }
