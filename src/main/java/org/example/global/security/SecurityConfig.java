@@ -1,13 +1,24 @@
 package org.example.global.security;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.example.domain.member.type.RoleType;
+import org.example.global.advice.ErrorMessage;
 import org.example.global.security.filter.JwtAuthenticationFilter;
+import org.example.global.security.handler.CustomAccessDeniedHandler;
+import org.example.global.security.handler.CustomAuthenticationEntryPoint;
 import org.example.global.security.jwt.JwtProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
@@ -18,6 +29,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -29,6 +41,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -42,16 +56,20 @@ public class SecurityConfig {
 
         /* 권한에 대한 접근 */
         http.authorizeHttpRequests(authorization -> {
-            /*authorization
-                    .requestMatchers("/", "/login", "/signup").permitAll()
-                    .requestMatchers("/admin").hasAuthority(ADMIN.getValue())
-                    .requestMatchers("/user").has*/
-
-            /* 우선적으로 모든 인증 요청에 대해 권한 허용, 이후 인증자만 접근 가능. 추후 세부 수정 예정 */
             authorization
-                    .requestMatchers("/**").permitAll()
-                    .anyRequest().authenticated();
+                    .requestMatchers("/api/trashcan/registrations/**", "/api/trashcan/suggestions/**")
+                    .hasAnyRole(RoleType.USER.name(), RoleType.ADMIN.name())
+                    .requestMatchers("/api/notification/list/**").permitAll()
+                    .requestMatchers("/admin/**", "/api/notification/", "/api/notification/{id}")
+                    .hasAnyRole(RoleType.ADMIN.name())
+                    .anyRequest().permitAll();
         });
+
+        http
+                .exceptionHandling(e -> {
+                    e.accessDeniedHandler(customAccessDeniedHandler);
+                    e.authenticationEntryPoint(customAuthenticationEntryPoint);
+                });
 
         http
                 .addFilterBefore(new JwtAuthenticationFilter(jwtProvider),
@@ -64,19 +82,20 @@ public class SecurityConfig {
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring().requestMatchers(
                 "/", "/oauth2**",
-                "/swagger-ui/**", "/api-docs/**", "/api/trashcan/**"); //swagger, 쓰레기통 데이터 들어갔는지 확인을 위한 임시 설정
+                "/swagger-ui/**", "/api-docs/**"); //swagger
     }
 
     //cors 설정
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("https://112.157.225.138:3000", "http://112.157.225.138:3000", "http://localhost:3000"));
+        configuration.setAllowedOrigins(List.of("https://tfinder.store", "http://localhost:3000", "http://localhost:8080/swagger-ui"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+
         return source;
     }
 

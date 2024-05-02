@@ -10,4 +10,8 @@ import lombok.Getter;
 public class ErrorMessage {
     @JsonProperty("message")
     private String message;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> dev

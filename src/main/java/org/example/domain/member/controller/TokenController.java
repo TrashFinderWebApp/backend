@@ -1,6 +1,8 @@
 package org.example.domain.member.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -20,9 +22,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "auth", description = "토큰 API")
 @RequiredArgsConstructor
+@RestController
 @RequestMapping("/api/auth")
 public class TokenController {
 
@@ -38,6 +42,7 @@ public class TokenController {
             @ApiResponse(responseCode = "401", description = "1. 헤더에 refresh token이 없을 때\t\n 2. refresh token이 일치하지 않을 때",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
+    @Parameter(name = "refresh token", in = ParameterIn.HEADER)
     public ResponseEntity<?> reissueToken(HttpServletRequest request, HttpServletResponse response) {
 
         String encryptedRefreshToken = jwtProvider.resolveRefreshToken(request);

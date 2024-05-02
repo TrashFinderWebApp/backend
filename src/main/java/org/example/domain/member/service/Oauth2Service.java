@@ -90,21 +90,21 @@ public class Oauth2Service {
         //String accessToken = getKakaoAccessToken(code);
         KakaoMember kakaoMember = getKakaoUserInfo(accessToken);
         Member member = createSocialUser(kakaoMember.getSocialId(), kakaoMember.getKakaoAccount().getNickName(), socialType);
-        return jwtProvider.createToken(member.getId().toString(), socialType.toString());
+        return jwtProvider.createToken(member.getId().toString(), "ROLE_" + member.getRole().toString());
     }
 
     public TokenInfo naverLogin(String accessToken, SocialType socialType) {
         //String accessToken = getNaverAccessToken(code);
         NaverMember naverMember = getNaverUserInfo(accessToken);
         Member member = createSocialUser(naverMember.getNaverUserInfo().getId(), naverMember.getNaverUserInfo().getName(), socialType);
-        return jwtProvider.createToken(member.getId().toString(), socialType.toString());
+        return jwtProvider.createToken(member.getId().toString(), "ROLE_" + member.getRole().toString());
     }
 
     public TokenInfo googleLogin(String accessToken, SocialType socialType) {
         //String accessToken = getGoogleAccessToken(code);
         GoogleMember googleMember = getGoogleUserInfo(accessToken);
         Member member = createSocialUser(googleMember.getSocialId(), googleMember.getSocialName(), socialType);
-        return jwtProvider.createToken(member.getId().toString(), socialType.toString());
+        return jwtProvider.createToken(member.getId().toString(), "ROLE_" + member.getRole().toString());
     }
 
     public String getKakaoAccessToken(String code) {

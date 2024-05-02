@@ -31,7 +31,6 @@ dependencies {
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
 
 	/* bean validation */
-	//implementation 'javax.validation:validation-api:2.0.1.Final'
 	implementation 'org.springframework.boot:spring-boot-starter-validation:3.2.4'
 
 	/* mysql(maria DB로 변경 예정)*/
@@ -40,6 +39,13 @@ dependencies {
 	/* 공간 데이터베이스*/
 	implementation 'org.hibernate:hibernate-spatial:6.4.1.Final'
 	implementation 'org.locationtech.jts:jts-core:1.18.1'
+
+	/* cloud storage*/
+	implementation group: 'org.springframework.cloud', name: 'spring-cloud-gcp-starter', version: '1.2.5.RELEASE'
+	implementation group: 'org.springframework.cloud', name: 'spring-cloud-gcp-storage', version: '1.2.5.RELEASE'
+
+	/* 이메일 인증 */
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
 
 	/* jwt */
 	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
@@ -63,14 +69,15 @@ processResources.dependsOn('copySecret2')
 tasks.register('copySecret', Copy) {
 	from 'backend_env/application.yml' // 서브모듈에 있는 환경변수 설정파일을 복사한다.
 	into 'src/main/resources'
+	from 'backend_env/application-prod.yml'
+	into 'src/main/resources'
+	from 'backend_env/application-dev.yml'
+	into 'src/main/resources'
 }
 
 tasks.register('copySecret2', Copy) {
-	from 'backend_env/yml/application-prod.yml'
-	into 'src/main/resources/yml'
-
-	from 'backend_env/yml/application-dev.yml'
-	into 'src/main/resources/yml'
+	from 'backend_env/tfinder-417312-8eda298328e3.json'
+	into 'src/main/resources'
 }
 
 tasks.named('test') {

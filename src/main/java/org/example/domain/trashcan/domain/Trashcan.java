@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.Type;
 import org.locationtech.jts.geom.Point;
 
@@ -18,6 +19,7 @@ import org.locationtech.jts.geom.Point;
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
+@Setter
 @Entity
 @Table(name = "trashcan")
 public class Trashcan {
@@ -36,4 +38,8 @@ public class Trashcan {
 
     @Column(nullable = false)
     private Integer views = 0;
+
+    public void increaseViews(){
+        this.views += 1;
+    }
 }

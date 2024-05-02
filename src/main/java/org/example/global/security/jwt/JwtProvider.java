@@ -2,6 +2,7 @@ package org.example.global.security.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -102,15 +103,18 @@ public class JwtProvider {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;
         } catch (SecurityException | MalformedJwtException e) {//error 403
-            log.info("Invalid JWT Token", e);
+            log.error("Invalid JWT Token", e);
+            throw new JwtException("Invalid JWT Token");
         } catch (ExpiredJwtException e) {
-            log.info("Expired JWT Token", e);
+            log.error("Expired JWT Token", e);
+            throw new JwtException("Expired JWT Token");
         } catch (UnsupportedJwtException e) {
-            log.info("Unsupported JWT Token", e);
+            log.error("Unsupported JWT Token", e);
+            throw new JwtException("Unsupported JWT Token");
         } catch (IllegalArgumentException e) {//error 401
-            log.info("JWT claims string is empty.", e);
+            log.error("JWT claims string is empty.", e);
+            throw new JwtException("JWT claims string is empty");
         }
-        return false;
     }
 
     public Claims parseClaims(String token) {
