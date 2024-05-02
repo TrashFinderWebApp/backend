@@ -9,4 +9,7 @@ import lombok.Getter;
 public class AccessTokenResponse {
     @Schema(description = "로그인 시 주어지는 엑세스 토큰", example = "df234scERFDAEEF2348dsDFfew...")
     private String accessToken;
+
+    @Schema(description = "로그인 시 주어지는 JWT 만료 시간, Unix TimeStamp", example = "180000L")
+    private Long jwtExpiredTime;
 }

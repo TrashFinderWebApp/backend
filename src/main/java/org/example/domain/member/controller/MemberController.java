@@ -101,7 +101,7 @@ public class MemberController {
     }
 
     @PostMapping("/signin")
-    @Operation(summary = "유저 로그인", description = "서비스 내 로그인 API")
+    @Operation(summary = "유저 로그인", description = "서비스 내 로그인 API, jwt 만료 시간은 unix timestamp형태")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "로그인 성공",
                     content = @Content(schema = @Schema(implementation = AccessTokenResponse.class)),
@@ -121,9 +121,9 @@ public class MemberController {
             cookie.setHttpOnly(true);
 
             response.addCookie(cookie);
-            String accessToken = tokenInfo.getAccessToken();
 
-            return new ResponseEntity<>(new AccessTokenResponse(accessToken), HttpStatus.OK);
+            return new ResponseEntity<>(new AccessTokenResponse(
+                    tokenInfo.getAccessToken(), tokenInfo.getExpiredTime()), HttpStatus.OK);
         } catch (BadCredentialsException e) {
             return new ResponseEntity<>(new ErrorMessage("아이디나 비밀번호가 일치하지 않습니다."), HttpStatus.UNAUTHORIZED);
         } catch (IllegalArgumentException e) {
