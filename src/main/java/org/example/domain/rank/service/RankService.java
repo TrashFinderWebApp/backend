@@ -10,6 +10,7 @@ import org.example.domain.rank.controller.dto.PersonalRankResponse;
 import org.example.domain.rank.controller.dto.RankDataResponse;
 import org.example.domain.rank.controller.dto.RankListResponse;
 import org.example.domain.rank.repository.ScoreRepository;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,36 +19,34 @@ import org.springframework.stereotype.Service;
 public class RankService {
     private final ScoreRepository scoreRepository;
     private final MemberRepository memberRepository;
-
-    public List<RankListResponse> getRankList(Integer startIndex, Integer endIndex, Long lastRank, Long lastScore) {
-        List<RankDataResponse> responseData = scoreRepository.findMemberByScoreDescDTO();
-        log.info(String.valueOf(responseData.size()));
-        List<RankListResponse> responseList = convertToRankList(responseData);
-
-        if (startIndex == 1) {
-            return setEachRank(responseList.subList(0, endIndex), lastRank, lastScore);
-        }
-        if (endIndex >= responseList.size()) {
-            return setEachRank(responseList.subList(startIndex - 1, responseList.size()), lastRank, lastScore);
-        }
-
-        return setEachRank(responseList.subList(startIndex - 1, endIndex), lastRank, lastScore);
-
+    private List<RankDataResponse> responseDataTop100 = new ArrayList<>();
+    private List<RankListResponse> responseList = new ArrayList<>();
+    @Scheduled(fixedDelay = 1000 * 60 * 3)
+    public void updateRankData() {
+        responseDataTop100 = scoreRepository.findMemberByScoreDescDTO();
+        responseList = convertToRankList(responseDataTop100);
+        setEachRank(responseList);
     }
 
-    private List<RankListResponse> setEachRank(
-            List<RankListResponse> responseSubList, Long lastRank, Long lastScore) {
+    public List<RankListResponse> getRankList(Integer startIndex, Integer endIndex) {
+        //List<RankDataResponse> responseDataTop100 = scoreRepository.findMemberByScoreDescDTO();
+        log.info(String.valueOf(responseDataTop100.size()));
 
-        for (int i = 0; i < responseSubList.size(); i++) {
+        if (startIndex == 1) {
+            return responseList.subList(0, endIndex);
+        }
+        if (endIndex >= responseList.size()) {
+            return responseList.subList(startIndex - 1, responseList.size());
+        }
+
+        return responseList.subList(startIndex - 1, endIndex);
+    }
+
+    private void setEachRank(List<RankListResponse> responseSubList) {
+
+        for (int i = 1; i < responseSubList.size(); i++) {
             if (responseSubList.get(i).getTotalScore() == 0) {
-                responseSubList.get(i).rankUpdate(0L);
-            }
-            if (i == 0 && responseSubList.get(i).getTotalScore().equals(lastScore)) {
-                responseSubList.get(i).rankUpdate(lastRank);
-                continue;
-            }
-            if (i == 0) {
-                continue;
+                responseSubList.get(i).rankUpdate((long) responseSubList.size());
             }
             Long prevRank = responseSubList.get(i-1).getPersonalRank();
             Long prevPoint = responseSubList.get(i-1).getTotalScore();
@@ -55,7 +54,6 @@ public class RankService {
                 responseSubList.get(i).rankUpdate(prevRank);
             }
         }
-        return responseSubList;
     }
 
     private List<RankListResponse> convertToRankList(List<RankDataResponse> responses) {
@@ -89,34 +87,8 @@ public class RankService {
 
         return new PersonalRankResponse(personalRank, totalCount, personalPoint);
     }
-
-
-    /* 같은 점수일 때 같은 등수 */
-//    private Long convertToPersonalRank(List<RankDataResponse> responseData, Long userPk) {
-//        long rank = 1;
-//        long prevTotalScore = 0;
-//        long sameRankCount = 0;
-//        long targetScore = -1;
-//
-//        for (int i = 0; i < responseData.size(); i++) {
-//            if (responseData.get(i).getMember().getId().equals(userPk)) {
-//                targetScore = responseData.get(i).getTotalScore();
-//            }
-//            if (responseData.get(i).getTotalScore() != prevTotalScore) {
-//                if (targetScore >= prevTotalScore) {
-//                    return rank;
-//                }
-//                rank += sameRankCount;
-//                sameRankCount = 1;
-//            }
-//            else {
-//                sameRankCount++;
-//            }
-//
-//            prevTotalScore = responseData.get(i).getTotalScore();
-//        }
-//        return 0L;
-//    }
+    /* 같은 점수일 때 내림으로 맞춤. 예를 들어 1등이 1명이고 다음 점수가 자신 포함 2명일 시, 3등으로 표기 */
+    /* 단, 1등이 여러명이고 자신이 포함된다면 1등으로 표기, 0점은 총 인원 등수(35명이면 35등)으로 표기 */
     private Long convertToPersonalRank(List<RankDataResponse> responseData, Long userPk) {
         long rank = 1;
         long prevTotalScore = Long.MAX_VALUE; // 초기값을 최대값으로 설정
@@ -146,6 +118,5 @@ public class RankService {
         // 마지막 항목 처리
         return rank + sameRankCount - 1;
     }
-
 
 }

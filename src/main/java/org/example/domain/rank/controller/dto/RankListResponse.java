@@ -14,4 +14,10 @@ public class RankListResponse {
     private String memberName;
     @Schema(description = "멤버당 총 점수", example = "500")
     private Long totalScore;
+    @Schema(description = "멤버 등수", example = "3")
+    private Long personalRank;
+
+    public void rankUpdate(Long personalRank) {
+        this.personalRank = personalRank;
+    }
 }
