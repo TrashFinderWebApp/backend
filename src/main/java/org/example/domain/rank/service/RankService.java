@@ -29,9 +29,9 @@ public class RankService {
     }
 
     public List<RankListResponse> getRankList(Integer startIndex, Integer endIndex) {
-        //List<RankDataResponse> responseDataTop100 = scoreRepository.findMemberByScoreDescDTO();
-        log.info(String.valueOf(responseDataTop100.size()));
-
+        if (startIndex == 1 && endIndex >= responseList.size()) {
+            return responseList.subList(0, responseList.size());
+        }
         if (startIndex == 1) {
             return responseList.subList(0, endIndex);
         }
