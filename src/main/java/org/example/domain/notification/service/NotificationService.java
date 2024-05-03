@@ -26,7 +26,7 @@ public class NotificationService {
                 new Notification(
                         notificationRequest.getTitle(),
                         notificationRequest.getDescription(),
-                        NotificationType.valueOf(notificationRequest.getState())
+                        NotificationType.valueOf(notificationRequest.getState()).name()
                 ));
     }
 
@@ -41,7 +41,7 @@ public class NotificationService {
     }
 
     public List<NotificationListResponseAll> getStateNotificationList(NotificationType type) {
-        List<Notification> responseData = notificationRepository.findByStateOrderByCreatedAtDesc(type);
+        List<Notification> responseData = notificationRepository.findByStateOrderByCreatedAtDesc(type.name());
         List<NotificationListResponseAll> responseAllList = convertToResponseAllList(responseData);
 
         if (responseAllList.isEmpty()) {
@@ -55,7 +55,8 @@ public class NotificationService {
 
         for (Notification notification : responseData) {
             NotificationListResponseAll oneNotification = new NotificationListResponseAll(
-                    notification.getTitle(), notification.getDescription(), notification.getCreatedAt());
+                    notification.getTitle(), notification.getDescription(), notification.getCreatedAt(),
+                    NotificationType.valueOf(notification.getState()).getType());
             allList.add(oneNotification);
         }
 
