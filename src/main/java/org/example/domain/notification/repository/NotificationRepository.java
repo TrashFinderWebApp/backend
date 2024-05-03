@@ -9,5 +9,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
     List<Notification> findAllByOrderByCreatedAtDesc();
-    List<Notification> findByStateOrderByCreatedAtDesc(NotificationType state);
+    List<Notification> findByStateOrderByCreatedAtDesc(String state);
 }
