@@ -4,7 +4,6 @@ import io.jsonwebtoken.Claims;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -12,30 +11,19 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.domain.trashcan.domain.Description;
-import org.example.domain.trashcan.domain.Image;
-import org.example.domain.trashcan.domain.Trashcan;
 import org.example.domain.trashcan.dto.request.TrashcanLocationRequest;
 import org.example.domain.trashcan.dto.response.PersonalTrashcansResponse;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsResponse;
 import org.example.domain.trashcan.dto.response.TrashcanLocationResponse;
 import org.example.domain.trashcan.dto.response.TrashcanMessageResponse;
 import org.example.domain.trashcan.exception.InvalidStatusException;
-import org.example.domain.trashcan.exception.MemberNotFoundException;
 import org.example.domain.trashcan.exception.TrashcanNotFoundException;
 import org.example.domain.trashcan.service.TrashcanService;
 import org.example.global.advice.ErrorMessage;
 import org.example.global.security.jwt.JwtProvider;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -227,7 +215,7 @@ public class TrashcanController {
     public ResponseEntity<List<PersonalTrashcansResponse>> getTrashcansDetailsByMemberId(@PathVariable Long memberId) {
         List<PersonalTrashcansResponse> trashcanDetails = trashcanService.getTrashcanDetailsByMemberId(memberId);
         if (trashcanDetails.isEmpty()) {
-            throw new MemberNotFoundException("등록하거나 위치 제안한 쓰레기통이 없습니다.");
+            throw new TrashcanNotFoundException("등록하거나 위치 제안한 쓰레기통이 없습니다.");
         }
         return ResponseEntity.ok().body(trashcanDetails);
     }
@@ -257,7 +245,7 @@ public class TrashcanController {
 
         List<PersonalTrashcansResponse> trashcanDetails = trashcanService.getTrashcanDetailsByMemberId(memberId);
         if (trashcanDetails.isEmpty()) {
-            throw new MemberNotFoundException("등록하거나 위치 제안한 쓰레기통이 없습니다.");
+            throw new TrashcanNotFoundException("등록하거나 위치 제안한 쓰레기통이 없습니다.");
         }
         return ResponseEntity.ok().body(trashcanDetails);
 
