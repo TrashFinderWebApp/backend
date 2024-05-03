@@ -28,7 +28,6 @@ import org.example.domain.trashcan.dto.response.TrashcanDetailsResponse;
 import org.example.domain.trashcan.dto.response.TrashcanLocationResponse;
 import org.example.domain.trashcan.dto.response.TrashcanMessageResponse;
 import org.example.domain.trashcan.exception.ImageException;
-import org.example.domain.trashcan.exception.MemberNotFoundException;
 import org.example.domain.trashcan.exception.TrashcanNotFoundException;
 import org.example.domain.trashcan.repository.DescriptionRepository;
 import org.example.domain.trashcan.repository.ImageRepository;
