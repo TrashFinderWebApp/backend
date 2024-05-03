@@ -1,5 +1,6 @@
 package org.example.domain.trashcan.controller;
 
+import io.jsonwebtoken.Claims;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -206,8 +207,8 @@ public class TrashcanController {
     }
 
     @GetMapping("/member/{memberId}")
-    @Operation(summary = "본인이 등록, 위치 제안한 쓰레기통 정보 가져오기",
-            description = "본인이 등록, 위치 제안한 쓰레기통 정보 가져오기. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
+    @Operation(summary = "특정 멤버가 등록, 위치 제안한 쓰레기통 정보 가져오기",
+            description = "특정 멤버가 등록, 위치 제안한 쓰레기통 정보 가져오기. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "정보 가져오기 성공",
                     content = @Content(
@@ -229,6 +230,37 @@ public class TrashcanController {
             throw new MemberNotFoundException("등록하거나 위치 제안한 쓰레기통이 없습니다.");
         }
         return ResponseEntity.ok().body(trashcanDetails);
+    }
+
+    @GetMapping("/member/me")
+    @Operation(summary = "본인이 등록, 위치 제안한 쓰레기통 정보 가져오기",
+            description = "본인이 등록, 위치 제안한 쓰레기통 정보 가져오기. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "정보 가져오기 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = PersonalTrashcansResponse.class))
+                    )
+            ),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터(회원 id)",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "데이터가 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class))),
+    })
+    @Parameter(name = "access token", in = ParameterIn.HEADER)
+    public ResponseEntity<List<PersonalTrashcansResponse>> getTrashcansDetailsByMe(HttpServletRequest request){
+        String token = jwtProvider.resolveAccessToken(request);
+        Claims claims = jwtProvider.parseClaims(token);
+        Long memberId = Long.parseLong(claims.getSubject());
+
+        List<PersonalTrashcansResponse> trashcanDetails = trashcanService.getTrashcanDetailsByMemberId(memberId);
+        if (trashcanDetails.isEmpty()) {
+            throw new MemberNotFoundException("등록하거나 위치 제안한 쓰레기통이 없습니다.");
+        }
+        return ResponseEntity.ok().body(trashcanDetails);
+
     }
 
 }
