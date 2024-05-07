@@ -1,5 +1,6 @@
 package org.example.domain.trashcan.repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import org.example.domain.member.domain.Member;
 import org.example.domain.trashcan.domain.Registration;
@@ -12,4 +13,6 @@ public interface SuggestionRepository extends JpaRepository<Suggestion, Long> {
 
     List<Suggestion> findByMemberId(Long memberId);
     List<Suggestion> findByMemberAndTrashcan(Member member, Trashcan trashcan);
+
+    int countByMemberAndCreateAtBetween(Member member, LocalDateTime startOfDay, LocalDateTime endOfDay);
 }

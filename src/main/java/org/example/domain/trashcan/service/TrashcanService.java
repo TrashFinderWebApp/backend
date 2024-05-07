@@ -8,6 +8,8 @@ import io.jsonwebtoken.Claims;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.UUID;
@@ -17,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.domain.member.domain.Member;
 import org.example.domain.member.repository.MemberRepository;
 import org.example.domain.member.service.MemberService;
+import org.example.domain.rank.domain.ScoreDescription;
+import org.example.domain.rank.repository.ScoreRepository;
 import org.example.domain.trashcan.domain.Description;
 import org.example.domain.trashcan.domain.Image;
 import org.example.domain.trashcan.domain.Registration;
@@ -45,6 +49,7 @@ import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Coordinate;
 import org.springframework.util.ResourceUtils;
 import org.springframework.web.multipart.MultipartFile;
+import org.example.domain.rank.domain.Score;
 
 @Slf4j
 @Service
@@ -59,6 +64,7 @@ public class TrashcanService{
     private final JwtProvider jwtProvider;
     private final MemberRepository memberRepository;
     private final MemberService memberService;
+    private final ScoreRepository scoreRepository;
 
     @Value("${spring.cloud.gcp.storage.credentials.location}")
     private String keyFileName;
@@ -201,22 +207,23 @@ public class TrashcanService{
         return count != null && count > 0;
     }
 
-    private void associateTrashcanWithUser(String accessToken, Trashcan savedTrashcan) {
-        Claims claims = jwtProvider.parseClaims(accessToken);
-
-        memberRepository.findById(Long.parseLong(claims.getSubject()))
-                .map(member -> {
-                    Registration registration = new Registration();
-                    registration.setMember(member);
-                    registration.setTrashcan(savedTrashcan);
-                    registrationRepository.save(registration);
-                    return registration;
-                }).orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
-    }
-
     public TrashcanMessageResponse registerTrashcan(double latitude, double longitude, String addressDetail, String address, String description, List<MultipartFile> imageObjects, String accessToken) {
         if (isCoordinateDuplicate(latitude, longitude)) {
             throw new IllegalArgumentException("이미 해당 위치에 쓰레기통이 등록되어 있습니다.");
+        }
+
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().plusDays(1).atStartOfDay().minusNanos(1);
+
+        Claims claims = jwtProvider.parseClaims(accessToken);
+        Member member = memberRepository.findById(Long.parseLong(claims.getSubject())).
+                orElseThrow(()-> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
+
+        int registrationCount = registrationRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
+        int suggestionCount = suggestionRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
+
+        if (registrationCount + suggestionCount >= 3) {
+            throw new IllegalStateException("하루 제한 횟수를 초과하였습니다.");
         }
 
         GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
@@ -230,9 +237,12 @@ public class TrashcanService{
 
         Trashcan savedTrashcan = trashcanRepository.save(trashcan);
 
+        int totalScore = 100;
+
         if (imageObjects != null && !imageObjects.isEmpty()) {
             try {
                 saveImages(imageObjects, trashcan);
+                totalScore += 100;
             } catch (IOException e) {
                 throw new ImageException("이미지 저장 중 오류가 발생하였습니다.");
             }
@@ -240,18 +250,20 @@ public class TrashcanService{
 
         if (description != null && !description.isEmpty()) {
             saveDescription(description, savedTrashcan);
+            totalScore += 100;
         }
 
-        Claims claims = jwtProvider.parseClaims(accessToken);
+        Registration registration = new Registration();
+        registration.setMember(member);
+        registration.setTrashcan(savedTrashcan);
+        registrationRepository.save(registration);
 
-        memberRepository.findById(Long.parseLong(claims.getSubject()))
-                .map(member -> {
-                    Registration registration = new Registration();
-                    registration.setMember(member);
-                    registration.setTrashcan(savedTrashcan);
-                    registrationRepository.save(registration);
-                    return registration;
-                }).orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
+        Score score = Score.builder()
+                .eachScore(totalScore)
+                .scoreDescription(ScoreDescription.REGISTRATION)
+                .member(member)
+                .build();
+        scoreRepository.save(score);
 
         return new TrashcanMessageResponse("쓰레기통 위치가 성공적으로 등록되었습니다.");
     }
@@ -267,17 +279,27 @@ public class TrashcanService{
         Long memberId = Long.parseLong(claims.getSubject());
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
-        log.info("중복 등록 검사: 회원 ID = {}, 쓰레기통 ID = {}", memberId, trashcanId);
         // 중복 등록 검사
         List<Registration> registrations = registrationRepository.findByMemberAndTrashcan(member, trashcan);
-        log.info("findByMemberAndTrashcan 결과 개수: {}", registrations.size());
         if (!registrations.isEmpty()) {
             throw new IllegalStateException("이미 해당 쓰레기통에 등록된 정보가 있습니다.");
         }
 
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().plusDays(1).atStartOfDay().minusNanos(1);
+        int registrationCount = registrationRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
+        int suggestionCount = suggestionRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
+
+        if (registrationCount + suggestionCount >= 3) {
+            throw new IllegalStateException("하루 제한 횟수를 초과하였습니다.");
+        }
+
+        int totalScore = 100;
+
         if (imageFiles != null && !imageFiles.isEmpty()) {
             try {
                 saveImages(imageFiles, trashcan);
+                totalScore += 100;
             } catch (IOException e) {
                 throw new ImageException("이미지 저장 중 오류가 발생하였습니다.");
             }
@@ -285,18 +307,47 @@ public class TrashcanService{
 
         if (description != null && !description.isEmpty()) {
             saveDescription(description, trashcan);
+            totalScore += 100;
         }
+
+        Score score = Score.builder()
+                .eachScore(totalScore)
+                .scoreDescription(ScoreDescription.REGISTRATION)
+                .member(member)
+                .build();
+        scoreRepository.save(score);
 
         // 중복이 아니라면 registration 정보 저장
         Registration registration = new Registration();
         registration.setMember(member);
         registration.setTrashcan(trashcan);
         registrationRepository.save(registration);
+
+        // 상태 업데이트
+        long registrationTotalCount = registrationRepository.countByTrashcan(trashcan);
+        if (registrationTotalCount >= 5) {
+            trashcan.setStatus("added");
+            trashcanRepository.save(trashcan);
+        }
     }
 
     public TrashcanMessageResponse suggestTrashcan(double latitude, double longitude, String addressDetail, String address, String description, List<MultipartFile> imageObjects, String accessToken) {
         if (isCoordinateDuplicate(latitude, longitude)) {
             throw new IllegalArgumentException("이미 해당 위치에 쓰레기통이 등록되어 있습니다.");
+        }
+
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().plusDays(1).atStartOfDay().minusNanos(1);
+
+        Claims claims = jwtProvider.parseClaims(accessToken);
+        Member member = memberRepository.findById(Long.parseLong(claims.getSubject())).
+                orElseThrow(()-> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
+
+        int registrationCount = registrationRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
+        int suggestionCount = suggestionRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
+
+        if (registrationCount + suggestionCount >= 3) {
+            throw new IllegalStateException("하루 제한 횟수를 초과하였습니다.");
         }
 
         GeometryFactory geometryFactory = new GeometryFactory(new PrecisionModel(), 4326);
@@ -310,9 +361,12 @@ public class TrashcanService{
 
         Trashcan savedTrashcan = trashcanRepository.save(trashcan);
 
+        int totalScore = 100;
+
         if (imageObjects != null && !imageObjects.isEmpty()) {
             try {
                 saveImages(imageObjects, savedTrashcan);
+                totalScore += 100;
             } catch (IOException e) {
                 throw new ImageException("이미지 저장 중 오류가 발생하였습니다.");
             }
@@ -320,17 +374,20 @@ public class TrashcanService{
 
         if (description != null && !description.isEmpty()) {
             saveDescription(description, savedTrashcan);
+            totalScore += 100;
         }
 
-        Claims claims = jwtProvider.parseClaims(accessToken);
-        memberRepository.findById(Long.parseLong(claims.getSubject()))
-                .map(member -> {
-                    Suggestion suggestion = new Suggestion();
-                    suggestion.setMember(member);
-                    suggestion.setTrashcan(trashcan);
-                    suggestionRepository.save(suggestion);
-                    return suggestion;
-                }).orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
+        Suggestion suggestion = new Suggestion();
+        suggestion.setMember(member);
+        suggestion.setTrashcan(trashcan);
+        suggestionRepository.save(suggestion);
+
+        Score score = Score.builder()
+                .eachScore(totalScore)
+                .scoreDescription(ScoreDescription.SUGGESTION)
+                .member(member)
+                .build();
+        scoreRepository.save(score);
 
         return new TrashcanMessageResponse("쓰레기통 위치가 성공적으로 제안되었습니다.");
     }
@@ -347,18 +404,28 @@ public class TrashcanService{
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
 
-        log.info("제안 중복 검사: 회원 ID = {}, 쓰레기통 ID = {}", memberId, trashcanId);
         // 제안 중복 등록 검사
         List<Suggestion> suggestions = suggestionRepository.findByMemberAndTrashcan(member, trashcan);
-        log.info("findByMemberAndTrashcan 결과 개수: {}", suggestions.size());
 
         if (!suggestions.isEmpty()) {
             throw new IllegalStateException("이미 해당 쓰레기통에 대한 제안이 있습니다.");
         }
 
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().plusDays(1).atStartOfDay().minusNanos(1);
+        int registrationCount = registrationRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
+        int suggestionCount = suggestionRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
+
+        if (registrationCount + suggestionCount >= 3) {
+            throw new IllegalStateException("하루 제한 횟수를 초과하였습니다.");
+        }
+
+        int totalScore = 100;
+
         if (imageFiles != null && !imageFiles.isEmpty()) {
             try {
                 saveImages(imageFiles, trashcan);
+                totalScore += 100;
             } catch (IOException e) {
                 throw new ImageException("이미지 저장 중 오류가 발생하였습니다.");
             }
@@ -366,7 +433,15 @@ public class TrashcanService{
 
         if (description != null && !description.isEmpty()) {
             saveDescription(description, trashcan);
+            totalScore += 100;
         }
+
+        Score score = Score.builder()
+                .eachScore(totalScore)
+                .scoreDescription(ScoreDescription.SUGGESTION)
+                .member(member)
+                .build();
+        scoreRepository.save(score);
 
         // 중복이 아니라면 Suggestion 정보 저장
         Suggestion suggestion = new Suggestion();
