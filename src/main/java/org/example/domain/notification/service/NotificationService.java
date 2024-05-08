@@ -25,8 +25,7 @@ public class NotificationService {
         notificationRepository.save(
                 new Notification(
                         notificationRequest.getTitle(),
-                        notificationRequest.getDescription(),
-                        NotificationType.valueOf(notificationRequest.getState()).name()
+                        notificationRequest.getDescription(), notificationRequest.getState()
                 ));
     }
 
