@@ -43,9 +43,10 @@ public class NotificationService {
         return convertToResponseAllList(responseData);
     }
 
+
     private NotificationListResponseAll convertToResponseAllList(Page<Notification> responseData) {
         return new NotificationListResponseAll(responseData);
-}
+    }
 
     @Transactional
     public void updateNotification(Long id, UpdateNotificationRequest updateRequest) {
