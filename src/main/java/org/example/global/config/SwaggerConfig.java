@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
 
 @OpenAPIDefinition(
         servers = {
-                @Server(url = "https://tfinder.store", description = "Default Server url")
+                @Server(url = "/", description = "Default Server url")
         },
         info = @Info(
                 title = "Example API Docs",

@@ -16,9 +16,9 @@ import org.example.domain.member.dto.EmailVerificationResult;
 import org.example.domain.member.dto.request.UserSignInRequest;
 import org.example.domain.member.dto.request.UserSignUpRequest;
 import org.example.domain.member.dto.response.AccessTokenResponse;
-import org.example.domain.member.dto.response.ErrorMessage;
 import org.example.domain.member.dto.response.TokenInfo;
 import org.example.domain.member.service.MemberService;
+import org.example.global.advice.ErrorMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -86,8 +86,8 @@ public class MemberController {
     @GetMapping("/emails/verifications")
     @Operation(summary = "이메일 인증 코드 확인", description = "유저가 입력한 이메일과 인증 코드의 유효성을 검증합니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "인증 성공", content = @Content(schema = @Schema(implementation = EmailVerificationResult.class))),
-            @ApiResponse(responseCode = "400", description = "인증 실패", content = @Content(schema = @Schema(implementation = EmailVerificationResult.class)))
+            @ApiResponse(responseCode = "200", description = "인증 성공, "),
+            @ApiResponse(responseCode = "400", description = "인증 실패", content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public ResponseEntity<?> verificationEmail(@RequestParam("email") @Valid @Email String email,
             @RequestParam("code") String authCode) {
