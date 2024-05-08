@@ -30,5 +30,5 @@ public interface TrashcanRepository extends JpaRepository<Trashcan, Long> {
     @Query(value = "SELECT COUNT(*) FROM trashcan WHERE ST_Equals(location, :location) = true", nativeQuery = true)
     Long existsByLocation(@Param("location") Point location);
 
-
+    List<Trashcan> findByStatus(String status);
 }

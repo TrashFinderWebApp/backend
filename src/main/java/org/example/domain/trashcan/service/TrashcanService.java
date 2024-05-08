@@ -5,6 +5,7 @@ import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import io.jsonwebtoken.Claims;
+import jakarta.persistence.criteria.CriteriaBuilder.In;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.io.InputStream;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import javax.swing.TransferHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.domain.member.domain.Member;
@@ -24,11 +26,14 @@ import org.example.domain.rank.repository.ScoreRepository;
 import org.example.domain.trashcan.domain.Description;
 import org.example.domain.trashcan.domain.Image;
 import org.example.domain.trashcan.domain.Registration;
+import org.example.domain.trashcan.domain.Report;
 import org.example.domain.trashcan.domain.Suggestion;
 import org.example.domain.trashcan.domain.Trashcan;
 import org.example.domain.trashcan.dto.request.TrashcanLocationRequest;
 import org.example.domain.trashcan.dto.response.PersonalTrashcansResponse;
+import org.example.domain.trashcan.dto.response.ReportResponse;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsResponse;
+import org.example.domain.trashcan.dto.response.TrashcanDetailsResponseWithReportCount;
 import org.example.domain.trashcan.dto.response.TrashcanLocationResponse;
 import org.example.domain.trashcan.dto.response.TrashcanMessageResponse;
 import org.example.domain.trashcan.exception.ImageException;
@@ -36,6 +41,7 @@ import org.example.domain.trashcan.exception.TrashcanNotFoundException;
 import org.example.domain.trashcan.repository.DescriptionRepository;
 import org.example.domain.trashcan.repository.ImageRepository;
 import org.example.domain.trashcan.repository.RegistrationRepository;
+import org.example.domain.trashcan.repository.ReportRepository;
 import org.example.domain.trashcan.repository.SuggestionRepository;
 import org.example.domain.trashcan.repository.TrashcanRepository;
 import org.example.global.security.jwt.JwtProvider;
@@ -65,6 +71,7 @@ public class TrashcanService{
     private final MemberRepository memberRepository;
     private final MemberService memberService;
     private final ScoreRepository scoreRepository;
+    private final ReportRepository reportRepository;
 
     @Value("${spring.cloud.gcp.storage.credentials.location}")
     private String keyFileName;
@@ -455,27 +462,143 @@ public class TrashcanService{
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
 
-        List<Trashcan> registeredTrashcans = registrationRepository.findByMemberId(memberId).stream().map(Registration::getTrashcan).collect(Collectors.toList());
-        List<Trashcan> suggestedTrashcans = suggestionRepository.findByMemberId(memberId).stream().map(Suggestion::getTrashcan).collect(Collectors.toList());
         List<PersonalTrashcansResponse> responses = new ArrayList<>();
 
-        for (Trashcan trashcan : registeredTrashcans) {
+        List<Registration> registrations = registrationRepository.findByMemberId(memberId);
+        for (Registration registration : registrations) {
+            Trashcan trashcan = registration.getTrashcan();
             List<String> images = getImagesByTrashcanId(trashcan.getId()).stream().map(Image::getImage).collect(Collectors.toList());
             List<String> descriptions = getDescriptionsByTrashcanId(trashcan.getId()).stream().map(Description::getDescription).collect(Collectors.toList());
-            Integer count = 0;
-            count = getRegistrationCountForTrashcan(trashcan.getId());
+            Integer count = getRegistrationCountForTrashcan(trashcan.getId());
 
-            PersonalTrashcansResponse response = new PersonalTrashcansResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), count);
+            PersonalTrashcansResponse response = new PersonalTrashcansResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), registration.getCreateAt(), count);
             responses.add(response);
         }
-        for (Trashcan trashcan : suggestedTrashcans) {
+
+        List<Suggestion> suggestions = suggestionRepository.findByMemberId(memberId);
+        for (Suggestion suggestion : suggestions) {
+            Trashcan trashcan = suggestion.getTrashcan();
             List<String> images = getImagesByTrashcanId(trashcan.getId()).stream().map(Image::getImage).collect(Collectors.toList());
             List<String> descriptions = getDescriptionsByTrashcanId(trashcan.getId()).stream().map(Description::getDescription).collect(Collectors.toList());
-            Integer count = 0;
-            count = getSuggestionCountForTrashcan(trashcan.getId());
-            PersonalTrashcansResponse response = new PersonalTrashcansResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), count);
+            Integer count = getSuggestionCountForTrashcan(trashcan.getId());
+
+            PersonalTrashcansResponse response = new PersonalTrashcansResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), suggestion.getCreateAt(), count);
             responses.add(response);
         }
         return responses;
+    }
+
+    public void updateTrashcanStatus(Long id, String status){
+        Trashcan trashcan = trashcanRepository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("쓰레기통을 찾을 수 없습니다."));
+        trashcan.setStatus(status);
+        trashcanRepository.save(trashcan);
+    }
+
+    public List<TrashcanDetailsResponseWithReportCount> getTrashcanDetailsByStatusAndCount(String status, Integer count) {
+        List<TrashcanDetailsResponseWithReportCount> responses = new ArrayList<>();
+
+        List<Trashcan> filteredTrashcans = trashcanRepository.findByStatus(status);
+
+        for (Trashcan trashcan : filteredTrashcans) {
+            Integer registrationCount = getRegistrationCountForTrashcan(trashcan.getId());
+            Integer suggestionCount = getSuggestionCountForTrashcan(trashcan.getId());
+            Integer reportCount = reportRepository.countByTrashcanId(trashcan.getId());
+
+            if (registrationCount >= count) {
+                List<String> images = getImagesByTrashcanId(trashcan.getId()).stream()
+                        .map(Image::getImage)
+                        .collect(Collectors.toList());
+                List<String> descriptions = getDescriptionsByTrashcanId(trashcan.getId()).stream()
+                        .map(Description::getDescription)
+                        .collect(Collectors.toList());
+                TrashcanDetailsResponseWithReportCount trashcanDetailsResponse = new TrashcanDetailsResponseWithReportCount(
+                        trashcan.getId(),
+                        trashcan.getAddress(),
+                        trashcan.getAddressDetail(),
+                        images, // 이미지 URL 리스트
+                        descriptions, // 설명 텍스트 리스트
+                        trashcan.getViews(),
+                        trashcan.getStatus(),
+                        registrationCount,
+                        reportCount
+                );
+                responses.add(trashcanDetailsResponse);
+            } else if(suggestionCount >= count) {
+                List<String> images = getImagesByTrashcanId(trashcan.getId()).stream()
+                        .map(Image::getImage)
+                        .collect(Collectors.toList());
+                List<String> descriptions = getDescriptionsByTrashcanId(trashcan.getId()).stream()
+                        .map(Description::getDescription)
+                        .collect(Collectors.toList());
+                TrashcanDetailsResponseWithReportCount trashcanDetailsResponse = new TrashcanDetailsResponseWithReportCount(
+                        trashcan.getId(),
+                        trashcan.getAddress(),
+                        trashcan.getAddressDetail(),
+                        images, // 이미지 URL 리스트
+                        descriptions, // 설명 텍스트 리스트
+                        trashcan.getViews(),
+                        trashcan.getStatus(),
+                        suggestionCount,
+                        reportCount
+                );
+                responses.add(trashcanDetailsResponse);
+            }
+        }
+
+        return responses;
+    }
+
+    public void deleteTrashcanById(Long id) {
+        if (!trashcanRepository.existsById(id)) {
+            throw new TrashcanNotFoundException("쓰레기통을 찾을 수 없음: " + id);
+        }
+        trashcanRepository.deleteById(id);
+    }
+
+    public void reportTrashcan(Long trashcanId, String description, String accessToken) {
+        Trashcan trashcan = trashcanRepository.findById(trashcanId)
+                .orElseThrow(() -> new IllegalArgumentException("해당 쓰레기통을 찾을 수 없습니다. ID: " + trashcanId));
+
+        Claims claims = jwtProvider.parseClaims(accessToken);
+        Long memberId = Long.parseLong(claims.getSubject());
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
+
+        boolean existsReport = reportRepository.existsByMemberAndTrashcan(member, trashcan);
+        if (existsReport) {
+            throw new IllegalStateException("이미 신고된 쓰레기통입니다.");
+        }
+
+        LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+        LocalDateTime endOfDay = LocalDate.now().plusDays(1).atStartOfDay().minusNanos(1);
+
+        long todayReportsCount = reportRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
+        if (todayReportsCount >= 3) {
+            throw new IllegalStateException("하루 신고 횟수를 초과하였습니다.");
+        }
+
+        Report report = Report.builder()
+                .member(member)
+                .trashcan(trashcan)
+                .description(description)
+                .build();
+        reportRepository.save(report);
+
+        long reportCount = reportRepository.countByTrashcan(trashcan);
+        if (reportCount >= 5) {
+            trashcan.setStatus("removed");
+            trashcanRepository.save(trashcan);
+        }
+    }
+
+    public List<ReportResponse> getReportsByTrashcanId(Long trashcanId) {
+        List<Report> reports = reportRepository.findByTrashcanId(trashcanId);
+        if (reports.isEmpty()) {
+            throw new IllegalArgumentException("신고 요청이 없습니다.");
+        }
+
+        //Report -> ReportResponse
+        return reports.stream().map(ReportResponse::new).collect(Collectors.toList());
     }
 }
