@@ -54,7 +54,8 @@ public class NotificationService {
 
         for (Notification notification : responseData) {
             NotificationListResponseAll oneNotification = new NotificationListResponseAll(
-                    notification.getTitle(), notification.getDescription(), notification.getCreatedAt());
+                    notification.getTitle(), notification.getDescription(), notification.getCreatedAt(),
+                    NotificationType.valueOf(notification.getState()).getType());
             allList.add(oneNotification);
         }
 

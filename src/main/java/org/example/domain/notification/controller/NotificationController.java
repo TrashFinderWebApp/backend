@@ -38,11 +38,12 @@ public class NotificationController {
 
 
     @PostMapping("/")
-    @Operation(summary = "공지사항 생성", description = "공지사항 생성 API, 관리자만 접근 가능합니다.")
+    @Operation(summary = "공지사항 생성", description = "공지사항 생성 API, 관리자만 접근 가능합니다. \t\n "
+            + "UPDATED, GENERAL, EVENT 상태값만 허용합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공",
                     content = @Content(schema = @Schema(implementation = NotificationListResponseAll.class))),
-            @ApiResponse(responseCode = "400", description = "1. 제목 미입력 \\t\\n 2. 공지사항 분류 미선택",
+            @ApiResponse(responseCode = "400", description = "1. 제목 미입력 \t\n 2. 공지사항 분류 미선택",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
             @ApiResponse(responseCode = "500", description = "기타 서버 에러",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
