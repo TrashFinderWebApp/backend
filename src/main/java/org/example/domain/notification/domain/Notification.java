@@ -50,7 +50,7 @@ public class Notification extends BaseTimeEntity {
             this.description = updateRequest.getDescription();
         }
         if (updateRequest.getState() != null) {
-            this.state = NotificationType.valueOf(updateRequest.getState()).name();
+            this.state = updateRequest.getState();
         }
     }
 

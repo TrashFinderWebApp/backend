@@ -59,8 +59,8 @@ public class SecurityConfig {
             authorization
                     .requestMatchers("/api/trashcan/registrations/**", "/api/trashcan/suggestions/**")
                     .hasAnyRole(RoleType.USER.name(), RoleType.ADMIN.name())
-                    .requestMatchers("/api/notification/list/**").permitAll()
-                    .requestMatchers("/admin/**", "/api/notification/", "/api/notification/{id}")
+                    .requestMatchers(HttpMethod.GET,"/api/notification/**").permitAll()
+                    .requestMatchers("/admin/**", "/api/notification/**")
                     .hasAnyRole(RoleType.ADMIN.name())
                     .anyRequest().permitAll();
         });
