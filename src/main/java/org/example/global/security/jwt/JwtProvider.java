@@ -55,7 +55,7 @@ public class JwtProvider {
     }
     public TokenInfo createToken(String userPk, String roles){
 
-        long jwtExpiredUnixTime = System.currentTimeMillis() + 1000 * 60 * 30;
+        long jwtExpiredUnixTime = System.currentTimeMillis() + 1000 * 10;
 
         String accessToken = Jwts.builder()
                 .setSubject(userPk)
@@ -100,20 +100,9 @@ public class JwtProvider {
 
     //토큰 정보를 검증하는 메서드
     public boolean validateToken(String token) {
-        try {
-            log.info("토큰 검증");
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
-            return true;
-        } catch (SecurityException | MalformedJwtException e) {//error 403
-            log.error("Invalid JWT Token", e);
-        } catch (ExpiredJwtException e) {
-            log.error("Expired JWT Token", e);
-        } catch (UnsupportedJwtException e) {
-            log.error("Unsupported JWT Token", e);
-        } catch (IllegalArgumentException e) {//error 401
-            log.error("JWT claims string is empty.", e);
-        }
-        return false;
+        log.info("토큰 검증");
+        Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+        return true;
     }
 
     public Claims parseClaims(String token) {
