@@ -56,7 +56,7 @@ public class JwtProvider {
     }
     public TokenInfo createToken(String userPk, String roles){
 
-        long jwtExpiredUnixTime = System.currentTimeMillis() + 1000 * 10;
+        long jwtExpiredUnixTime = System.currentTimeMillis() + 1000 * 60 * 30;
 
         String accessToken = Jwts.builder()
                 .setSubject(userPk)
