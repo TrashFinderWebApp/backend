@@ -23,7 +23,6 @@ import org.example.domain.trashcan.dto.response.TrashcanDetailsResponseWithRepor
 import org.example.domain.trashcan.dto.response.TrashcanLocationResponse;
 import org.example.domain.trashcan.dto.response.TrashcanMessageResponse;
 import org.example.domain.trashcan.exception.InvalidStatusException;
-import org.example.domain.trashcan.exception.MemberNotFoundException;
 import org.example.domain.trashcan.exception.TrashcanNotFoundException;
 import org.example.domain.trashcan.service.TrashcanService;
 import org.example.global.advice.ErrorMessage;
@@ -227,7 +226,7 @@ public class TrashcanController {
         List<PersonalTrashcansResponse> trashcanDetails = trashcanService.getTrashcanDetailsByMemberId(
                 memberId);
         if (trashcanDetails.isEmpty()) {
-            throw new MemberNotFoundException("등록하거나 위치 제안한 쓰레기통이 없습니다.");
+            throw new TrashcanNotFoundException("등록하거나 위치 제안한 쓰레기통이 없습니다.");
         }
         return ResponseEntity.ok().body(trashcanDetails);
     }

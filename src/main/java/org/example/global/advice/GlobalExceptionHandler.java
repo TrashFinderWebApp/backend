@@ -4,7 +4,6 @@ import io.jsonwebtoken.ExpiredJwtException;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
-import org.example.domain.trashcan.exception.MemberNotFoundException;
 import org.example.domain.trashcan.exception.TrashcanNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -45,7 +44,7 @@ public class GlobalExceptionHandler {
             return ResponseEntity.badRequest().body(new ErrorMessage(message));
         } else if (e instanceof ExpiredJwtException) {
             status = HttpStatus.FORBIDDEN;
-        } else if (e instanceof TrashcanNotFoundException || e instanceof MemberNotFoundException) {
+        } else if (e instanceof TrashcanNotFoundException) {
             status = HttpStatus.NOT_FOUND;
         }
         return new ResponseEntity<>(new ErrorMessage(e.getMessage()), status);
