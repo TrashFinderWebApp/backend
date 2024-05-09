@@ -312,7 +312,7 @@ public class TrashcanController {
         if (!validStatuses.contains(status)) {
             throw new InvalidStatusException("유효하지 않은 status 값입니다.");
         }
-        if (count <= 0) {
+        if (count < 0) {
             throw new InvalidStatusException("잘못된 count 값입니다.");
         }
         List<TrashcanDetailsResponseWithReportCount> trashcansResponseList = trashcanService.getTrashcanDetailsByStatusAndCount(
@@ -341,7 +341,8 @@ public class TrashcanController {
     }
 
     @PostMapping("/reports/{id}")
-    @Operation(summary = "쓰레기통 신고 추가", description = "쓰레기통에 대한 신고를 추가합니다. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
+    @Operation(summary = "쓰레기통 신고 추가",
+            description = "쓰레기통에 대한 신고를 추가합니다. 하루에 3번 신고 가능, 중복 신고 불가능, 신고 5회 이상 자동 removed. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "쓰레기통 신고 추가 성공",
                     content = @Content(mediaType = "application/json",
