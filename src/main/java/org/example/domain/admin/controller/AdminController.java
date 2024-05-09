@@ -16,6 +16,8 @@ import org.example.global.advice.ErrorMessage;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -49,6 +51,24 @@ public class AdminController {
             }
 
             return new ResponseEntity<>(memberListResponse, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>(new ErrorMessage(e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @PatchMapping("/members/{id}")
+    @Operation(summary = "멤버 역할 변경", description = "멤버 역할 변경 API, 관리자만 접근 가능합니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "변경 성공",
+                    content = @Content(schema = @Schema(implementation = NotificationListResponseAll.class))),
+            @ApiResponse(responseCode = "500", description = "기타 서버 에러",
+                    content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
+    })
+    @Parameter(name = "access token")
+    public ResponseEntity<?> updateMemberRole(@PathVariable("id") Long memberId, @RequestParam String updatedRole) {
+        try {
+            adminService.updateMemberRole(memberId, updatedRole);
+            return new ResponseEntity<>(HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new ErrorMessage(e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
         }
