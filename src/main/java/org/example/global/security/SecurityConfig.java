@@ -57,10 +57,10 @@ public class SecurityConfig {
         /* 권한에 대한 접근 */
         http.authorizeHttpRequests(authorization -> {
             authorization
-                    .requestMatchers("/api/trashcan/registrations/**", "/api/trashcan/suggestions/**", "/api/trashcan/reports/**")
+                    .requestMatchers("/api/trashcans/registrations/**", "/api/trashcans/suggestions/**", "/api/trashcans/reports/**")
                     .hasAnyRole(RoleType.USER.name(), RoleType.ADMIN.name())
                     .requestMatchers(HttpMethod.GET,"/api/notification/**").permitAll()
-                    .requestMatchers("/admin/**", "/api/notification/", "/api/trashcan/{id}", "/api/trashcan/list", "/api/trashcan/status/**")
+                    .requestMatchers("/admin/**", "/api/notification/", "/api/trashcans/{id}", "/api/trashcans", "/api/trashcans/status/**")
                     .hasAnyRole(RoleType.ADMIN.name())
                     .anyRequest().permitAll();
         });

@@ -42,7 +42,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "trashcan", description = "쓰레기통 api")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/trashcan")
+@RequestMapping("/api/trashcans")
 public class TrashcanController {
 
     private final TrashcanService trashcanService;
@@ -288,7 +288,7 @@ public class TrashcanController {
         return ResponseEntity.ok().body(new TrashcanMessageResponse("성공적으로 쓰레기통의 상태를 변경했습니다."));
     }
 
-    @GetMapping("/list")
+    @GetMapping()
     @Operation(summary = "쓰레기통 리스트 조회 with 요청횟수",
             description = "상태와 요청횟수를 받아서 요청횟수 이상인 쓰레기통 리스트 조회. 이 작업은 관리자만 수행할 수 있습니다.")
     @ApiResponses(value = {
