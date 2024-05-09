@@ -39,9 +39,7 @@ public class MemberController {
     @PostMapping("/signup")
     @Operation(summary = "유저 회원가입", description = "서비스 내 회원가입 API")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "로그인 성공",
-                    content = @Content(schema = @Schema(implementation = AccessTokenResponse.class)),
-                    headers = @Header(name = "refreshToken", description = "리프레시 토큰, http-only설정, 헤더 속 쿠키로 반환")),
+            @ApiResponse(responseCode = "200", description = "회원가입 성공"),
             @ApiResponse(responseCode = "400", description = "1. 이메일 중복 \t\n 2. 비밀번호 불일치 \t\n "
                     + "3. 이메일 혹은 비밀번호 형식이 맞지 않습니다. \t\n 4. 이메일, 비밀번호, 이름이 비어 있습니다. \t\n"
                     + "5. 인증 코드가 잘못 되었습니다.",
@@ -114,7 +112,7 @@ public class MemberController {
         try {
             TokenInfo tokenInfo = memberService.userSignIn(request);
 
-            Cookie cookie = new Cookie("refreshToken", tokenInfo.getRefreshToken());
+            Cookie cookie = new Cookie("RefreshToken", tokenInfo.getRefreshToken());
             cookie.setMaxAge(14 * 24 * 60 * 60);//expires in 2 weeks
 
             cookie.setSecure(true);
@@ -123,7 +121,7 @@ public class MemberController {
             response.addCookie(cookie);
 
             return new ResponseEntity<>(new AccessTokenResponse(
-                    tokenInfo.getAccessToken(), tokenInfo.getExpiredTime()), HttpStatus.OK);
+                    tokenInfo.getAccessToken(), tokenInfo.getExpiredTime(), tokenInfo.getMemberRoleType()), HttpStatus.OK);
         } catch (BadCredentialsException e) {
             return new ResponseEntity<>(new ErrorMessage("아이디나 비밀번호가 일치하지 않습니다."), HttpStatus.UNAUTHORIZED);
         } catch (IllegalArgumentException e) {

@@ -53,7 +53,7 @@ public class TokenController {
         try {
             TokenInfo tokenInfo = tokenService.reIssueToken(encryptedRefreshToken);
 
-            Cookie cookie = new Cookie("refreshToken", tokenInfo.getRefreshToken());
+            Cookie cookie = new Cookie("RefreshToken", tokenInfo.getRefreshToken());
             cookie.setMaxAge(14*24*60*60);//expires in 2 weeks
 
             cookie.setSecure(true);
@@ -62,7 +62,7 @@ public class TokenController {
             response.addCookie(cookie);
 
             return new ResponseEntity<>(new AccessTokenResponse(
-                    tokenInfo.getAccessToken(), tokenInfo.getExpiredTime()), HttpStatus.OK);
+                    tokenInfo.getAccessToken(), tokenInfo.getExpiredTime(), tokenInfo.getMemberRoleType()), HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(new ErrorMessage(e.getMessage()),HttpStatus.UNAUTHORIZED);
         }
