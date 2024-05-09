@@ -62,7 +62,7 @@ public class TokenController {
             response.addCookie(cookie);
 
             return new ResponseEntity<>(new AccessTokenResponse(
-                    tokenInfo.getAccessToken(), tokenInfo.getExpiredTime()), HttpStatus.OK);
+                    tokenInfo.getAccessToken(), tokenInfo.getExpiredTime(), tokenInfo.getMemberRoleType()), HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(new ErrorMessage(e.getMessage()),HttpStatus.UNAUTHORIZED);
         }

@@ -75,7 +75,7 @@ public class JwtProvider {
 
         refreshTokenService.saveTokenInfo(userPk, refreshToken);
 
-        return new TokenInfo(accessToken, refreshToken, jwtExpiredUnixTime);
+        return new TokenInfo(accessToken, refreshToken, jwtExpiredUnixTime, roles);
     }
 
     //JWT 토큰을 복호화하여 토큰에 들어있는 정보를 꺼내는 메서드
