@@ -34,9 +34,9 @@ public class Notification extends BaseTimeEntity {
     private String description;
 
     @Column(name = "state", nullable = false)
-    private NotificationType state;
+    private String state;
 
-    public Notification(String title, String description, NotificationType type) {
+    public Notification(String title, String description, String type) {
         this.title = title;
         this.description = description;
         this.state = type;
@@ -50,7 +50,7 @@ public class Notification extends BaseTimeEntity {
             this.description = updateRequest.getDescription();
         }
         if (updateRequest.getState() != null) {
-            this.state = NotificationType.valueOf(updateRequest.getState());
+            this.state = updateRequest.getState();
         }
     }
 

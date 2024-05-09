@@ -7,7 +7,9 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class NotificationListResponseAll {
+    private Long id;
     private String title;
     private String description;
     private LocalDateTime createdAt;
+    private String state;
 }

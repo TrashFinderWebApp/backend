@@ -55,11 +55,14 @@ public class JwtProvider {
         this.key = Keys.hmacShaKeyFor(keyBytes);
     }
     public TokenInfo createToken(String userPk, String roles){
+
+        long jwtExpiredUnixTime = System.currentTimeMillis() + 1000 * 60 * 30;
+
         String accessToken = Jwts.builder()
                 .setSubject(userPk)
                 .claim(AUTHORITIES_KEY, roles)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30))//30분 유효기간
+                .setExpiration(new Date(jwtExpiredUnixTime))//30분 유효기간
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
 
@@ -72,7 +75,7 @@ public class JwtProvider {
 
         refreshTokenService.saveTokenInfo(userPk, refreshToken);
 
-        return new TokenInfo(accessToken, refreshToken);
+        return new TokenInfo(accessToken, refreshToken, jwtExpiredUnixTime);
     }
 
     //JWT 토큰을 복호화하여 토큰에 들어있는 정보를 꺼내는 메서드
@@ -98,23 +101,9 @@ public class JwtProvider {
 
     //토큰 정보를 검증하는 메서드
     public boolean validateToken(String token) {
-        try {
-            log.info("토큰 검증");
-            Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
-            return true;
-        } catch (SecurityException | MalformedJwtException e) {//error 403
-            log.error("Invalid JWT Token", e);
-            throw new JwtException("Invalid JWT Token");
-        } catch (ExpiredJwtException e) {
-            log.error("Expired JWT Token", e);
-            throw new JwtException("Expired JWT Token");
-        } catch (UnsupportedJwtException e) {
-            log.error("Unsupported JWT Token", e);
-            throw new JwtException("Unsupported JWT Token");
-        } catch (IllegalArgumentException e) {//error 401
-            log.error("JWT claims string is empty.", e);
-            throw new JwtException("JWT claims string is empty");
-        }
+        log.info("토큰 검증");
+        Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+        return true;
     }
 
     public Claims parseClaims(String token) {

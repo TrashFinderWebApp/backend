@@ -11,3 +11,4 @@ public class ErrorMessage {
     @JsonProperty("message")
     private String message;
 }
+

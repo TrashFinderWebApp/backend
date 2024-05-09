@@ -37,28 +37,18 @@ public class AdminController {
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
     })
     @Parameter(name = "access token")
-    public ResponseEntity<?> getMembersList(@RequestParam Integer page) {
+    public ResponseEntity<?> getMembersList(@RequestParam Integer page, @RequestParam(required = false) String memberName) {
         try {
-            MemberListResponse memberListResponse = adminService.getMembersList(page);
-            return new ResponseEntity<>(HttpStatus.OK);
-        } catch (Exception e) {
-            return new ResponseEntity<>(new ErrorMessage(e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+            MemberListResponse memberListResponse;
 
-    @GetMapping("/members")
-    @Operation(summary = "특정 멤버 조회", description = "멤버 조회 API, 이름으로 검색 가능, 관리자만 접근 가능합니다.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = NotificationListResponseAll.class))),
-            @ApiResponse(responseCode = "500", description = "기타 서버 에러",
-                    content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-    })
-    @Parameter(name = "access token")
-    public ResponseEntity<?> getMembersListFindByName(@RequestParam Integer page, @RequestParam String memberName) {
-        try {
-            MemberListResponse memberListResponse = adminService.getMembersListFindByName(page, memberName);
-            return new ResponseEntity<>(HttpStatus.OK);
+            if (memberName == null) {
+                memberListResponse = adminService.getMembersList(page);
+            }
+            else {
+                memberListResponse = adminService.getMembersListFindByName(page, memberName);
+            }
+
+            return new ResponseEntity<>(memberListResponse, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>(new ErrorMessage(e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
         }

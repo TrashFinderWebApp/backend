@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Tag(name = "notification", description = "공지사항 API")
@@ -37,11 +38,12 @@ public class NotificationController {
 
 
     @PostMapping("/")
-    @Operation(summary = "공지사항 생성", description = "공지사항 생성 API, 관리자만 접근 가능합니다.")
+    @Operation(summary = "공지사항 생성", description = "공지사항 생성 API, 관리자만 접근 가능합니다. \t\n "
+            + "UPDATED, GENERAL, EVENT 상태값만 허용합니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공",
                     content = @Content(schema = @Schema(implementation = NotificationListResponseAll.class))),
-            @ApiResponse(responseCode = "400", description = "1. 제목 미입력 \\t\\n 2. 공지사항 분류 미선택",
+            @ApiResponse(responseCode = "400", description = "1. 제목 미입력 \t\n 2. 공지사항 분류 미선택",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
             @ApiResponse(responseCode = "500", description = "기타 서버 에러",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
@@ -57,8 +59,8 @@ public class NotificationController {
     }
 
 
-    @GetMapping("/list")
-    @Operation(summary = "공지사항 전체 조회", description = "공지사항 전체 조회 API")
+    @GetMapping
+    @Operation(summary = "공지사항 조회", description = "공지사항 조회 API")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "조회 성공",
                     content = @Content(schema = @Schema(implementation = NotificationListResponseAll.class))),
@@ -67,75 +69,18 @@ public class NotificationController {
             @ApiResponse(responseCode = "500", description = "기타 서버 에러",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
-    public ResponseEntity<?> getNotificationList() {
+    public ResponseEntity<?> getNotificationList(
+            @RequestParam(defaultValue = "ALL", required = false) String notificationType) {
         try {
-            List<NotificationListResponseAll> responseList = notificationService.getAllNotificationList();
-            return new ResponseEntity<>(responseList, HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(new ErrorMessage(e.getMessage()), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(new ErrorMessage("기타 서버 에러"), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
+            List<NotificationListResponseAll> responseList;
 
-    @GetMapping("/list/updated")
-    @Operation(summary = "공지사항 업데이트 항목 조회", description = "공지사항 업데이트 항목 조회 API")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = NotificationListResponseAll.class))),
-            @ApiResponse(responseCode = "404", description = "공지사항 업데이트 항목이 없습니다.",
-                    content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "500", description = "기타 서버 에러",
-                    content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
-    })
-    public ResponseEntity<?> getUpdatedNotificationList() {
-        try {
-            List<NotificationListResponseAll> responseList = notificationService.getStateNotificationList(
-                    NotificationType.UPDATED);
-            return new ResponseEntity<>(responseList, HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(new ErrorMessage(e.getMessage()), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(new ErrorMessage("기타 서버 에러"), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/list/general")
-    @Operation(summary = "공지사항 일반 항목 조회", description = "공지사항 일반 항목 조회 API")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = NotificationListResponseAll.class))),
-            @ApiResponse(responseCode = "404", description = "공지사항 일반 항목이 없습니다.",
-                    content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "500", description = "기타 서버 에러",
-                    content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
-    })
-    public ResponseEntity<?> getGeneralNotificationList() {
-        try {
-            List<NotificationListResponseAll> responseList = notificationService.getStateNotificationList(
-                    NotificationType.GENERAL);
-            return new ResponseEntity<>(responseList, HttpStatus.OK);
-        } catch (IllegalArgumentException e) {
-            return new ResponseEntity<>(new ErrorMessage(e.getMessage()), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
-            return new ResponseEntity<>(new ErrorMessage("기타 서버 에러"), HttpStatus.INTERNAL_SERVER_ERROR);
-        }
-    }
-
-    @GetMapping("/list/event")
-    @Operation(summary = "공지사항 이벤트 항목 조회", description = "공지사항 이벤트 항목 조회 API")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "조회 성공",
-                    content = @Content(schema = @Schema(implementation = NotificationListResponseAll.class))),
-            @ApiResponse(responseCode = "404", description = "이벤트 항목 공지사항이 없습니다.",
-                    content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
-            @ApiResponse(responseCode = "500", description = "기타 서버 에러",
-                    content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
-    })
-    public ResponseEntity<?> getGeneraEventList() {
-        try {
-            List<NotificationListResponseAll> responseList = notificationService.getStateNotificationList(
-                    NotificationType.EVENT);
+            if (notificationType.equals("ALL")) {
+                responseList = notificationService.getAllNotificationList();
+            }
+            else {
+                responseList = notificationService.getStateNotificationList(
+                        NotificationType.valueOf(notificationType));
+            }
             return new ResponseEntity<>(responseList, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(new ErrorMessage(e.getMessage()), HttpStatus.NOT_FOUND);
