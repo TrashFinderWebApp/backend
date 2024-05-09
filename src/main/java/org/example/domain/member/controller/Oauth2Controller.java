@@ -50,7 +50,7 @@ public class Oauth2Controller {
         try {
             TokenInfo tokenInfo = oauth2Service.socialLogin(socialType, socialAccessToken);
 
-            Cookie cookie = new Cookie("refreshToken", tokenInfo.getRefreshToken());
+            Cookie cookie = new Cookie("RefreshToken", tokenInfo.getRefreshToken());
             cookie.setMaxAge(14*24*60*60);//expires in 2 weeks
             cookie.setPath("/");
 
