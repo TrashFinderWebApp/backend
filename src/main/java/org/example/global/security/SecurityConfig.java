@@ -60,7 +60,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/trashcan/registrations/**", "/api/trashcan/suggestions/**")
                     .hasAnyRole(RoleType.USER.name(), RoleType.ADMIN.name())
                     .requestMatchers(HttpMethod.GET,"/api/notification/**").permitAll()
-                    .requestMatchers("/admin/**", "/api/notification/**")
+                    .requestMatchers("/api/admin/**", "/api/notification/**")
                     .hasAnyRole(RoleType.ADMIN.name())
                     .anyRequest().permitAll();
         });
