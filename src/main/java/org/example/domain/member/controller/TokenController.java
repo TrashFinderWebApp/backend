@@ -55,6 +55,7 @@ public class TokenController {
 
             Cookie cookie = new Cookie("RefreshToken", tokenInfo.getRefreshToken());
             cookie.setMaxAge(14*24*60*60);//expires in 2 weeks
+            cookie.setPath("/api/auth/reissue");
 
             cookie.setSecure(true);
             cookie.setHttpOnly(true);

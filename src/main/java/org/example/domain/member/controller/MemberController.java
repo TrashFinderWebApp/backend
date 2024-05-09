@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.domain.member.dto.EmailVerificationResult;
 import org.example.domain.member.dto.request.UserSignInRequest;
 import org.example.domain.member.dto.request.UserSignUpRequest;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/members")
+@Slf4j
 public class MemberController {
     private final MemberService memberService;
 
@@ -114,6 +116,7 @@ public class MemberController {
 
             Cookie cookie = new Cookie("RefreshToken", tokenInfo.getRefreshToken());
             cookie.setMaxAge(14 * 24 * 60 * 60);//expires in 2 weeks
+            cookie.setPath("/api/auth/reissue");
 
             cookie.setSecure(true);
             cookie.setHttpOnly(true);
