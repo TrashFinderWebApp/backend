@@ -50,7 +50,7 @@ public class Oauth2Controller {
         try {
             TokenInfo tokenInfo = oauth2Service.socialLogin(socialType, socialAccessToken);
 
-            Cookie cookie = new Cookie("refreshToken", tokenInfo.getRefreshToken());
+            Cookie cookie = new Cookie("RefreshToken", tokenInfo.getRefreshToken());
             cookie.setMaxAge(14*24*60*60);//expires in 2 weeks
             cookie.setPath("/");
 
@@ -60,7 +60,7 @@ public class Oauth2Controller {
             response.addCookie(cookie);
 
             return new ResponseEntity<>(new AccessTokenResponse(
-                    tokenInfo.getAccessToken(), tokenInfo.getExpiredTime()), HttpStatus.OK);
+                    tokenInfo.getAccessToken(), tokenInfo.getExpiredTime(), tokenInfo.getMemberRoleType()), HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(new ErrorMessage(e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
         }

@@ -12,4 +12,7 @@ public class AccessTokenResponse {
 
     @Schema(description = "로그인 시 주어지는 JWT 만료 시간, Unix TimeStamp", example = "180000L")
     private Long jwtExpiredTime;
+
+    @Schema(description = "로그인한 유저의 권한", example = "USER")
+    private String memberRole;
 }

@@ -70,16 +70,17 @@ public class NotificationController {
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class)))
     })
     public ResponseEntity<?> getNotificationList(
-            @RequestParam(defaultValue = "ALL", required = false) String notificationType) {
+            @RequestParam(defaultValue = "ALL", required = false) String notificationType,
+            @RequestParam Integer page) {
         try {
-            List<NotificationListResponseAll> responseList;
+            NotificationListResponseAll responseList;
 
             if (notificationType.equals("ALL")) {
-                responseList = notificationService.getAllNotificationList();
+                responseList = notificationService.getAllNotificationList(page);
             }
             else {
                 responseList = notificationService.getStateNotificationList(
-                        NotificationType.valueOf(notificationType));
+                        notificationType, page);
             }
             return new ResponseEntity<>(responseList, HttpStatus.OK);
         } catch (IllegalArgumentException e) {
