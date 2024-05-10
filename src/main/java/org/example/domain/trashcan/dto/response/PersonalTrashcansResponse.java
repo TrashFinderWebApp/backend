@@ -18,7 +18,7 @@ public class PersonalTrashcansResponse {
     private List<String> description;
     private Integer views;
     private String status;
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
     @Schema(description = "기본값 0, 쓰레기통이 등록상태나 제안 상태인 경우 횟수")
     private Integer count;
 }

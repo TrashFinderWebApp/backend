@@ -5,7 +5,6 @@ import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import com.google.cloud.storage.StorageOptions;
 import io.jsonwebtoken.Claims;
-import jakarta.persistence.criteria.CriteriaBuilder.In;
 import jakarta.transaction.Transactional;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,7 +14,6 @@ import java.util.ArrayList;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import javax.swing.TransferHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.domain.member.domain.Member;
@@ -30,8 +28,11 @@ import org.example.domain.trashcan.domain.Report;
 import org.example.domain.trashcan.domain.Suggestion;
 import org.example.domain.trashcan.domain.Trashcan;
 import org.example.domain.trashcan.dto.request.TrashcanLocationRequest;
+import org.example.domain.trashcan.dto.response.PersolnalTrashcansPageResponse;
 import org.example.domain.trashcan.dto.response.PersonalTrashcansResponse;
+import org.example.domain.trashcan.dto.response.ReportListResponse;
 import org.example.domain.trashcan.dto.response.ReportResponse;
+import org.example.domain.trashcan.dto.response.TrashcanDetailsPageResponse;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsResponse;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsResponseWithReportCount;
 import org.example.domain.trashcan.dto.response.TrashcanLocationResponse;
@@ -47,6 +48,8 @@ import org.example.domain.trashcan.repository.TrashcanRepository;
 import org.example.global.security.jwt.JwtProvider;
 import org.locationtech.jts.geom.PrecisionModel;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
@@ -56,6 +59,7 @@ import org.locationtech.jts.geom.Coordinate;
 import org.springframework.util.ResourceUtils;
 import org.springframework.web.multipart.MultipartFile;
 import org.example.domain.rank.domain.Score;
+import org.webjars.NotFoundException;
 
 @Slf4j
 @Service
@@ -93,9 +97,9 @@ public class TrashcanService{
         for (Trashcan trashcan : trashcans) {
             Integer count = 0;
 
-            if ("registered".equals(requestDto.getStatus())) {
+            if ("REGISTERED".equals(requestDto.getStatus())) {
                 count = getRegistrationCountForTrashcan(trashcan.getId());
-            } else if ("suggested".equals(requestDto.getStatus())) {
+            } else if ("SUGGESTED".equals(requestDto.getStatus())) {
                 count = getSuggestionCountForTrashcan(trashcan.getId());
             }
 
@@ -156,9 +160,9 @@ public class TrashcanService{
                 .collect(Collectors.toList());
         Integer count = 0;
 
-        if ("registered".equals(trashcan.getStatus())) {
+        if ("REGISTERED".equals(trashcan.getStatus())) {
             count = getRegistrationCountForTrashcan(trashcan.getId());
-        } else if ("suggested".equals(trashcan.getStatus())) {
+        } else if ("SUGGESTED".equals(trashcan.getStatus())) {
             count = getSuggestionCountForTrashcan(trashcan.getId());
         }
 
@@ -226,8 +230,8 @@ public class TrashcanService{
         Member member = memberRepository.findById(Long.parseLong(claims.getSubject())).
                 orElseThrow(()-> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
 
-        int registrationCount = registrationRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
-        int suggestionCount = suggestionRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
+        int registrationCount = registrationRepository.countByMemberAndCreatedAtBetween(member, startOfDay, endOfDay);
+        int suggestionCount = suggestionRepository.countByMemberAndCreatedAtBetween(member, startOfDay, endOfDay);
 
         if (registrationCount + suggestionCount >= 3) {
             throw new IllegalStateException("하루 제한 횟수를 초과하였습니다.");
@@ -240,7 +244,7 @@ public class TrashcanService{
         trashcan.setLocation(location);
         trashcan.setAddressDetail(addressDetail);
         trashcan.setAddress(address);
-        trashcan.setStatus("registered");
+        trashcan.setStatus("REGISTERED");
 
         Trashcan savedTrashcan = trashcanRepository.save(trashcan);
 
@@ -294,8 +298,8 @@ public class TrashcanService{
 
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = LocalDate.now().plusDays(1).atStartOfDay().minusNanos(1);
-        int registrationCount = registrationRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
-        int suggestionCount = suggestionRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
+        int registrationCount = registrationRepository.countByMemberAndCreatedAtBetween(member, startOfDay, endOfDay);
+        int suggestionCount = suggestionRepository.countByMemberAndCreatedAtBetween(member, startOfDay, endOfDay);
 
         if (registrationCount + suggestionCount >= 3) {
             throw new IllegalStateException("하루 제한 횟수를 초과하였습니다.");
@@ -350,8 +354,8 @@ public class TrashcanService{
         Member member = memberRepository.findById(Long.parseLong(claims.getSubject())).
                 orElseThrow(()-> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
 
-        int registrationCount = registrationRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
-        int suggestionCount = suggestionRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
+        int registrationCount = registrationRepository.countByMemberAndCreatedAtBetween(member, startOfDay, endOfDay);
+        int suggestionCount = suggestionRepository.countByMemberAndCreatedAtBetween(member, startOfDay, endOfDay);
 
         if (registrationCount + suggestionCount >= 3) {
             throw new IllegalStateException("하루 제한 횟수를 초과하였습니다.");
@@ -364,7 +368,7 @@ public class TrashcanService{
         trashcan.setLocation(location);
         trashcan.setAddressDetail(addressDetail);
         trashcan.setAddress(address);
-        trashcan.setStatus("suggested");
+        trashcan.setStatus("SUGGESTED");
 
         Trashcan savedTrashcan = trashcanRepository.save(trashcan);
 
@@ -420,8 +424,8 @@ public class TrashcanService{
 
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = LocalDate.now().plusDays(1).atStartOfDay().minusNanos(1);
-        int registrationCount = registrationRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
-        int suggestionCount = suggestionRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
+        int registrationCount = registrationRepository.countByMemberAndCreatedAtBetween(member, startOfDay, endOfDay);
+        int suggestionCount = suggestionRepository.countByMemberAndCreatedAtBetween(member, startOfDay, endOfDay);
 
         if (registrationCount + suggestionCount >= 3) {
             throw new IllegalStateException("하루 제한 횟수를 초과하였습니다.");
@@ -458,34 +462,45 @@ public class TrashcanService{
     }
 
 
-    public List<PersonalTrashcansResponse> getTrashcanDetailsByMemberId(Long memberId) {
+    public PersolnalTrashcansPageResponse getTrashcanDetailsByMemberId(Long memberId, String type, Pageable pageable) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
 
         List<PersonalTrashcansResponse> responses = new ArrayList<>();
+        PersolnalTrashcansPageResponse persolnalTrashcansPageResponse;
 
-        List<Registration> registrations = registrationRepository.findByMemberId(memberId);
-        for (Registration registration : registrations) {
-            Trashcan trashcan = registration.getTrashcan();
-            List<String> images = getImagesByTrashcanId(trashcan.getId()).stream().map(Image::getImage).collect(Collectors.toList());
-            List<String> descriptions = getDescriptionsByTrashcanId(trashcan.getId()).stream().map(Description::getDescription).collect(Collectors.toList());
-            Integer count = getRegistrationCountForTrashcan(trashcan.getId());
+        if (type.equals("REGISTRATION")) {
+            Page<Registration> registrations = registrationRepository.findByMemberId(memberId, pageable);
+            for (Registration registration : registrations) {
+                Trashcan trashcan = registration.getTrashcan();
+                List<String> images = getImagesByTrashcanId(trashcan.getId()).stream().map(Image::getImage).collect(Collectors.toList());
+                List<String> descriptions = getDescriptionsByTrashcanId(trashcan.getId()).stream().map(Description::getDescription).collect(Collectors.toList());
+                Integer count = getRegistrationCountForTrashcan(trashcan.getId());
 
-            PersonalTrashcansResponse response = new PersonalTrashcansResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), registration.getCreateAt(), count);
-            responses.add(response);
+                PersonalTrashcansResponse response = new PersonalTrashcansResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), registration.getCreatedAt(), count);
+                responses.add(response);
+            }
+            persolnalTrashcansPageResponse = new PersolnalTrashcansPageResponse(registrations.getTotalPages(), responses);
+
+        } else if (type.equals("SUGGESTION")) {
+            Page<Suggestion> suggestions = suggestionRepository.findByMemberId(memberId, pageable);
+            for (Suggestion suggestion : suggestions) {
+                Trashcan trashcan = suggestion.getTrashcan();
+                List<String> images = getImagesByTrashcanId(trashcan.getId()).stream().map(Image::getImage).collect(Collectors.toList());
+                List<String> descriptions = getDescriptionsByTrashcanId(trashcan.getId()).stream().map(Description::getDescription).collect(Collectors.toList());
+                Integer count = getSuggestionCountForTrashcan(trashcan.getId());
+
+                PersonalTrashcansResponse response = new PersonalTrashcansResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), suggestion.getCreatedAt(), count);
+                responses.add(response);
+            }
+            persolnalTrashcansPageResponse = new PersolnalTrashcansPageResponse(suggestions.getTotalPages(), responses);
+
+        } else {
+            throw new IllegalArgumentException("잘못된 타입입니다.");
         }
 
-        List<Suggestion> suggestions = suggestionRepository.findByMemberId(memberId);
-        for (Suggestion suggestion : suggestions) {
-            Trashcan trashcan = suggestion.getTrashcan();
-            List<String> images = getImagesByTrashcanId(trashcan.getId()).stream().map(Image::getImage).collect(Collectors.toList());
-            List<String> descriptions = getDescriptionsByTrashcanId(trashcan.getId()).stream().map(Description::getDescription).collect(Collectors.toList());
-            Integer count = getSuggestionCountForTrashcan(trashcan.getId());
 
-            PersonalTrashcansResponse response = new PersonalTrashcansResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), suggestion.getCreateAt(), count);
-            responses.add(response);
-        }
-        return responses;
+        return persolnalTrashcansPageResponse;
     }
 
     public void updateTrashcanStatus(Long id, String status){
@@ -495,58 +510,49 @@ public class TrashcanService{
         trashcanRepository.save(trashcan);
     }
 
-    public List<TrashcanDetailsResponseWithReportCount> getTrashcanDetailsByStatusAndCount(String status, Integer count) {
-        List<TrashcanDetailsResponseWithReportCount> responses = new ArrayList<>();
+    public TrashcanDetailsPageResponse getTrashcanDetailsByStatus(String status, Pageable pageable, String sort) {
+        Page<Trashcan> trashcans;
+        switch (sort) {
+            case "REGISTRATION":
+                trashcans = trashcanRepository.findByStatusSortedByRegistrationCount(status, pageable);
+                break;
+            case "SUGGESTION":
+                trashcans = trashcanRepository.findByStatusSortedBySuggestionCount(status, pageable);
+                break;
+            case "REPORT":
+                trashcans = trashcanRepository.findByStatusSortedByReportCount(status, pageable);
+                break;
+            default:
+                throw new IllegalArgumentException("잘못된 정렬 요청입니다.");
+        }
 
-        List<Trashcan> filteredTrashcans = trashcanRepository.findByStatus(status);
-
-        for (Trashcan trashcan : filteredTrashcans) {
+        List<TrashcanDetailsResponseWithReportCount> responses = trashcans.getContent().stream().map(trashcan -> {
             Integer registrationCount = getRegistrationCountForTrashcan(trashcan.getId());
             Integer suggestionCount = getSuggestionCountForTrashcan(trashcan.getId());
             Integer reportCount = reportRepository.countByTrashcanId(trashcan.getId());
+            List<String> images = getImagesByTrashcanId(trashcan.getId()).stream()
+                    .map(Image::getImage)
+                    .collect(Collectors.toList());
+            List<String> descriptions = getDescriptionsByTrashcanId(trashcan.getId()).stream()
+                    .map(Description::getDescription)
+                    .collect(Collectors.toList());
 
-            if (registrationCount >= count) {
-                List<String> images = getImagesByTrashcanId(trashcan.getId()).stream()
-                        .map(Image::getImage)
-                        .collect(Collectors.toList());
-                List<String> descriptions = getDescriptionsByTrashcanId(trashcan.getId()).stream()
-                        .map(Description::getDescription)
-                        .collect(Collectors.toList());
-                TrashcanDetailsResponseWithReportCount trashcanDetailsResponse = new TrashcanDetailsResponseWithReportCount(
-                        trashcan.getId(),
-                        trashcan.getAddress(),
-                        trashcan.getAddressDetail(),
-                        images, // 이미지 URL 리스트
-                        descriptions, // 설명 텍스트 리스트
-                        trashcan.getViews(),
-                        trashcan.getStatus(),
-                        registrationCount,
-                        reportCount
-                );
-                responses.add(trashcanDetailsResponse);
-            } else if(suggestionCount >= count) {
-                List<String> images = getImagesByTrashcanId(trashcan.getId()).stream()
-                        .map(Image::getImage)
-                        .collect(Collectors.toList());
-                List<String> descriptions = getDescriptionsByTrashcanId(trashcan.getId()).stream()
-                        .map(Description::getDescription)
-                        .collect(Collectors.toList());
-                TrashcanDetailsResponseWithReportCount trashcanDetailsResponse = new TrashcanDetailsResponseWithReportCount(
-                        trashcan.getId(),
-                        trashcan.getAddress(),
-                        trashcan.getAddressDetail(),
-                        images, // 이미지 URL 리스트
-                        descriptions, // 설명 텍스트 리스트
-                        trashcan.getViews(),
-                        trashcan.getStatus(),
-                        suggestionCount,
-                        reportCount
-                );
-                responses.add(trashcanDetailsResponse);
-            }
-        }
+            return new TrashcanDetailsResponseWithReportCount(
+                    trashcan.getId(),
+                    trashcan.getAddress(),
+                    trashcan.getAddressDetail(),
+                    images,
+                    descriptions,
+                    trashcan.getViews(),
+                    trashcan.getStatus(),
+                    Math.max(registrationCount, suggestionCount),
+                    reportCount
+            );
+        }).collect(Collectors.toList());
 
-        return responses;
+        TrashcanDetailsPageResponse trashcanDetailsPageResponse = new TrashcanDetailsPageResponse(trashcans.getTotalPages(), responses);
+
+        return trashcanDetailsPageResponse;
     }
 
     public void deleteTrashcanById(Long id) {
@@ -573,7 +579,7 @@ public class TrashcanService{
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         LocalDateTime endOfDay = LocalDate.now().plusDays(1).atStartOfDay().minusNanos(1);
 
-        long todayReportsCount = reportRepository.countByMemberAndCreateAtBetween(member, startOfDay, endOfDay);
+        long todayReportsCount = reportRepository.countByMemberAndCreatedAtBetween(member, startOfDay, endOfDay);
         if (todayReportsCount >= 3) {
             throw new IllegalStateException("하루 신고 횟수를 초과하였습니다.");
         }
@@ -587,7 +593,7 @@ public class TrashcanService{
 
         long reportCount = reportRepository.countByTrashcan(trashcan);
         if (reportCount >= 5) {
-            trashcan.setStatus("removed");
+            trashcan.setStatus("REMOVED");
             trashcanRepository.save(trashcan);
         }
     }
@@ -600,5 +606,25 @@ public class TrashcanService{
 
         //Report -> ReportResponse
         return reports.stream().map(ReportResponse::new).collect(Collectors.toList());
+    }
+
+    public ReportListResponse getReports(Pageable pageable) {
+        Page<Report> reports = reportRepository.findAllByOrderByCreatedAtDesc(pageable);
+        if (reports.isEmpty()) {
+            throw new NotFoundException("신고 내용이 없습니다.");
+        }
+
+        List<ReportResponse> reportResponses = reports.stream()
+                .map(ReportResponse::new)
+                .collect(Collectors.toList());
+
+        return new ReportListResponse(reports.getTotalPages(), reportResponses);
+    }
+
+    public void deleteReportById(Long id) {
+        if (!reportRepository.existsById(id)) {
+            throw new NotFoundException("신고 내역을 찾을 수 없음: " + id);
+        }
+        reportRepository.deleteById(id);
     }
 }

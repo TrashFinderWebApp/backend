@@ -17,8 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.domain.trashcan.domain.Trashcan;
 import org.example.domain.trashcan.dto.request.TrashcanLocationRequest;
 import org.example.domain.trashcan.dto.request.TrashcanStatusRequest;
+import org.example.domain.trashcan.dto.response.PersolnalTrashcansPageResponse;
 import org.example.domain.trashcan.dto.response.PersonalTrashcansResponse;
+import org.example.domain.trashcan.dto.response.ReportListResponse;
 import org.example.domain.trashcan.dto.response.ReportResponse;
+import org.example.domain.trashcan.dto.response.TrashcanDetailsPageResponse;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsResponse;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsResponseWithReportCount;
 import org.example.domain.trashcan.dto.response.TrashcanLocationResponse;
@@ -28,6 +31,9 @@ import org.example.domain.trashcan.exception.TrashcanNotFoundException;
 import org.example.domain.trashcan.service.TrashcanService;
 import org.example.global.advice.ErrorMessage;
 import org.example.global.security.jwt.JwtProvider;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -72,7 +78,7 @@ public class TrashcanController {
     })
     public ResponseEntity<?> getTrashcanLocations(
             @ModelAttribute TrashcanLocationRequest requestDto) {
-        List<String> validStatuses = Arrays.asList("added", "registered", "suggested", "removed");
+        List<String> validStatuses = Arrays.asList("added", "REGISTERED", "SUGGESTED", "REMOVED");
         if (!validStatuses.contains(requestDto.getStatus())) {
             throw new InvalidStatusException("유효하지 않은 status 값입니다.");
         }
@@ -206,12 +212,12 @@ public class TrashcanController {
 
     @GetMapping("/member/{memberId}")
     @Operation(summary = "특정 멤버가 등록, 위치 제안한 쓰레기통 정보 가져오기",
-            description = "특정 멤버가 등록, 위치 제안한 쓰레기통 정보 가져오기. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
+            description = "특정 멤버가 등록, 위치 제안한 쓰레기통 정보 가져오기, 타입은 (REGISTRATION, SUGGESTION). 이 작업은 인증된 사용자만 수행할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "정보 가져오기 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = PersonalTrashcansResponse.class))
+                            array = @ArraySchema(schema = @Schema(implementation = PersolnalTrashcansPageResponse.class))
                     )
             ),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터(회원 id)",
@@ -222,9 +228,12 @@ public class TrashcanController {
                             schema = @Schema(implementation = ErrorMessage.class))),
     })
     @Parameter(name = "access token", in = ParameterIn.HEADER)
-    public ResponseEntity<List<PersonalTrashcansResponse>> getTrashcansDetailsByMemberId(@PathVariable Long memberId) {
-        List<PersonalTrashcansResponse> trashcanDetails = trashcanService.getTrashcanDetailsByMemberId(memberId);
-        if (trashcanDetails.isEmpty()) {
+    public ResponseEntity<?> getTrashcansDetailsByMemberId(@PathVariable Long memberId, @RequestParam String type,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        PersolnalTrashcansPageResponse trashcanDetails = trashcanService.getTrashcanDetailsByMemberId(memberId, type, pageable);
+        if (trashcanDetails.getPersonalTrashcansResponses().isEmpty()) {
             throw new TrashcanNotFoundException("등록하거나 위치 제안한 쓰레기통이 없습니다.");
         }
         return ResponseEntity.ok().body(trashcanDetails);
@@ -237,7 +246,7 @@ public class TrashcanController {
             @ApiResponse(responseCode = "200", description = "정보 가져오기 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = PersonalTrashcansResponse.class))
+                            array = @ArraySchema(schema = @Schema(implementation = PersolnalTrashcansPageResponse.class))
                     )
             ),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터(회원 id)",
@@ -248,13 +257,16 @@ public class TrashcanController {
                             schema = @Schema(implementation = ErrorMessage.class))),
     })
     @Parameter(name = "access token", in = ParameterIn.HEADER)
-    public ResponseEntity<List<PersonalTrashcansResponse>> getTrashcansDetailsByMe(HttpServletRequest request){
+    public ResponseEntity<?> getTrashcansDetailsByMe(HttpServletRequest request, @RequestParam String type,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "20") int size){
         String token = jwtProvider.resolveAccessToken(request);
         Claims claims = jwtProvider.parseClaims(token);
         Long memberId = Long.parseLong(claims.getSubject());
 
-        List<PersonalTrashcansResponse> trashcanDetails = trashcanService.getTrashcanDetailsByMemberId(memberId);
-        if (trashcanDetails.isEmpty()) {
+        Pageable pageable = PageRequest.of(page, size);
+        PersolnalTrashcansPageResponse trashcanDetails = trashcanService.getTrashcanDetailsByMemberId(memberId, type, pageable);
+        if (trashcanDetails.getPersonalTrashcansResponses().isEmpty()) {
             throw new TrashcanNotFoundException("등록하거나 위치 제안한 쓰레기통이 없습니다.");
         }
         return ResponseEntity.ok().body(trashcanDetails);
@@ -280,7 +292,7 @@ public class TrashcanController {
     })
     public ResponseEntity<?> updateTrashcanStatus(@PathVariable Long id,
             @RequestBody TrashcanStatusRequest request) {
-        List<String> validStatuses = Arrays.asList("added", "registered", "suggested", "removed");
+        List<String> validStatuses = Arrays.asList("added", "REGISTERED", "SUGGESTED", "REMOVED");
         if (!validStatuses.contains(request.getStatus())) {
             throw new InvalidStatusException("유효하지 않은 status 값입니다.");
         }
@@ -289,13 +301,14 @@ public class TrashcanController {
     }
 
     @GetMapping()
-    @Operation(summary = "쓰레기통 리스트 조회 with 요청횟수",
-            description = "상태와 요청횟수를 받아서 요청횟수 이상인 쓰레기통 리스트 조회. 이 작업은 관리자만 수행할 수 있습니다.")
+    @Operation(summary = "쓰레기통 리스트 정렬해서 조회",
+            description = "상태와 정렬 조건을 받아서 쓰레기통 리스트 조회, 상태는 (ADDED, REGISTERED, SUGGESTED, REMOVED)"
+                    + "정렬조건은 (REGISTRATION, SUGGESTION, REPORT) 내림차순, 페이지 기본 사이즈 20.  이 작업은 관리자만 수행할 수 있습니다.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "쓰레기통 조회 성공",
+            @ApiResponse(responseCode = "200", description = "쓰레기통 리스트 조회 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = TrashcanDetailsResponse.class))
+                            array = @ArraySchema(schema = @Schema(implementation = TrashcanDetailsPageResponse.class))
                     )
             ),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터",
@@ -305,22 +318,18 @@ public class TrashcanController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessage.class))),
     })
-    public ResponseEntity<?> getTrashcansByStatusAndCount(
-            @RequestParam String status,
-            @RequestParam Integer count) {
-        List<String> validStatuses = Arrays.asList("added", "registered", "suggested", "removed");
+    public ResponseEntity<?> getTrashcansByStatus(@RequestParam String status,
+            @RequestParam String sort,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "20") int size) {
+        List<String> validStatuses = Arrays.asList("added", "REGISTERED", "SUGGESTED", "REMOVED");
         if (!validStatuses.contains(status)) {
             throw new InvalidStatusException("유효하지 않은 status 값입니다.");
         }
-        if (count < 0) {
-            throw new InvalidStatusException("잘못된 count 값입니다.");
-        }
-        List<TrashcanDetailsResponseWithReportCount> trashcansResponseList = trashcanService.getTrashcanDetailsByStatusAndCount(
-                status, count);
-        if (trashcansResponseList.isEmpty()) {
-            throw new TrashcanNotFoundException("조건을 만족하는 쓰레기통이 없습니다.");
-        }
-        return ResponseEntity.ok().body(trashcansResponseList);
+        Pageable pageable = PageRequest.of(page, size);
+        TrashcanDetailsPageResponse response = trashcanService.getTrashcanDetailsByStatus(status, pageable, sort);
+
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/{id}")
@@ -342,7 +351,7 @@ public class TrashcanController {
 
     @PostMapping("/reports/{id}")
     @Operation(summary = "쓰레기통 신고 추가",
-            description = "쓰레기통에 대한 신고를 추가합니다. 하루에 3번 신고 가능, 중복 신고 불가능, 신고 5회 이상 자동 removed. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
+            description = "쓰레기통에 대한 신고를 추가합니다. 하루에 3번 신고 가능, 중복 신고 불가능, 신고 5회 이상 자동 REMOVED. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "쓰레기통 신고 추가 성공",
                     content = @Content(mediaType = "application/json",
@@ -364,12 +373,12 @@ public class TrashcanController {
     }
 
     @GetMapping("/reports/{id}")
-    @Operation(summary = "쓰레기통 신고 내용 조회", description = "쓰레기통에 대한 신고 요청 내용을 확인합니다. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
+    @Operation(summary = "특정 쓰레기통 신고 내용 조회", description = "쓰레기통에 대한 신고 요청 내용을 확인합니다. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "쓰레기통 신고 요청 조회 성공",
                     content = @Content(
                             mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = PersonalTrashcansResponse.class))
+                            array = @ArraySchema(schema = @Schema(implementation = ReportResponse.class))
                     )
             ),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터",
@@ -382,5 +391,48 @@ public class TrashcanController {
     public ResponseEntity<List<ReportResponse>> getReportsByTrashcanId(@PathVariable Long id) {
         List<ReportResponse> responses = trashcanService.getReportsByTrashcanId(id);
         return ResponseEntity.ok(responses);
+    }
+
+    @GetMapping("/reports")
+    @Operation(summary = "쓰레기통 신고 리스트 조회",
+            description = "쓰레기통 신고 리스트 최신순으로 조회, 페이지 사이즈 20. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "쓰레기통 신고 요청 조회 성공",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(implementation = ReportListResponse.class))
+                    )
+            ),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "데이터가 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class))),
+    })
+    public ResponseEntity<ReportListResponse> getReports(
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        ReportListResponse reportListResponse = trashcanService.getReports(pageable);
+        return ResponseEntity.ok(reportListResponse);
+    }
+
+    @DeleteMapping("/reports/{id}")
+    @Operation(summary = "쓰레기통 신고 요청 삭제",
+            description = "쓰레기통 신고 요청 삭제. 이 작업은 관리자만 수행할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "쓰레기통 신고 요청 삭제 성공"),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "데이터가 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class))),
+    })
+    public ResponseEntity<?> deleteReport(@PathVariable Long id) {
+
+        trashcanService.deleteReportById(id);
+        return ResponseEntity.ok().build();
     }
 }

@@ -32,7 +32,7 @@ public class Suggestion {
 
     @Column(name = "create_at", nullable = false, updatable = false)
     @CreationTimestamp
-    private LocalDateTime createAt;
+    private LocalDateTime createdAt;
 
     @ManyToOne
     @JoinColumn(name = "member_id", nullable = false)
