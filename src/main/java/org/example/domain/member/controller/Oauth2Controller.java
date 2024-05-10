@@ -52,7 +52,7 @@ public class Oauth2Controller {
 
             Cookie cookie = new Cookie("RefreshToken", tokenInfo.getRefreshToken());
             cookie.setMaxAge(14*24*60*60);//expires in 2 weeks
-            cookie.setPath("/");
+            cookie.setPath("/api/auth/reissue");
 
             cookie.setSecure(true);//http통신에서는 전달x, https에서만 전달
             cookie.setHttpOnly(true);//XSS 예방
