@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class TrashcanDetailsResponseWithReportCount {
+public class TrashcanListResponse {
     private Long trashcanId;
     private String address;
     private String addressDetail;

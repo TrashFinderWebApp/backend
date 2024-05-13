@@ -194,7 +194,7 @@ public class AdminController {
             @RequestParam String sort,
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "20") int size) {
-        List<String> validStatuses = Arrays.asList("added", "REGISTERED", "SUGGESTED", "REMOVED");
+        List<String> validStatuses = Arrays.asList("ADDED", "REGISTERED", "SUGGESTED", "REMOVED");
         if (!validStatuses.contains(status)) {
             throw new InvalidStatusException("유효하지 않은 status 값입니다.");
         }
@@ -223,7 +223,7 @@ public class AdminController {
     })
     public ResponseEntity<?> updateTrashcanStatus(@PathVariable Long id,
             @RequestBody TrashcanStatusRequest request) {
-        List<String> validStatuses = Arrays.asList("added", "REGISTERED", "SUGGESTED", "REMOVED");
+        List<String> validStatuses = Arrays.asList("ADDED", "REGISTERED", "SUGGESTED", "REMOVED");
         if (!validStatuses.contains(request.getStatus())) {
             throw new InvalidStatusException("유효하지 않은 status 값입니다.");
         }

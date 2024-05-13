@@ -8,6 +8,6 @@ import lombok.Getter;
 @Getter
 public class TrashcanDetailsPageResponse {
     private Integer totalPages;
-    private List<TrashcanDetailsResponseWithReportCount> trashcanDetailsResponseWithReportCounts;
+    private List<TrashcanListResponse> trashcanDetailsResponseWithReportCounts;
 
 }

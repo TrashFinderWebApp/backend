@@ -14,16 +14,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.domain.trashcan.domain.Trashcan;
 import org.example.domain.trashcan.dto.request.TrashcanLocationRequest;
-import org.example.domain.trashcan.dto.request.TrashcanStatusRequest;
 import org.example.domain.trashcan.dto.response.PersolnalTrashcansPageResponse;
-import org.example.domain.trashcan.dto.response.PersonalTrashcansResponse;
-import org.example.domain.trashcan.dto.response.ReportListResponse;
-import org.example.domain.trashcan.dto.response.ReportResponse;
-import org.example.domain.trashcan.dto.response.TrashcanDetailsPageResponse;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsResponse;
-import org.example.domain.trashcan.dto.response.TrashcanDetailsResponseWithReportCount;
 import org.example.domain.trashcan.dto.response.TrashcanLocationResponse;
 import org.example.domain.trashcan.dto.response.TrashcanMessageResponse;
 import org.example.domain.trashcan.exception.InvalidStatusException;
@@ -31,7 +24,6 @@ import org.example.domain.trashcan.exception.TrashcanNotFoundException;
 import org.example.domain.trashcan.service.TrashcanService;
 import org.example.global.advice.ErrorMessage;
 import org.example.global.security.jwt.JwtProvider;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -78,7 +70,7 @@ public class TrashcanController {
     })
     public ResponseEntity<?> getTrashcanLocations(
             @ModelAttribute TrashcanLocationRequest requestDto) {
-        List<String> validStatuses = Arrays.asList("added", "REGISTERED", "SUGGESTED", "REMOVED");
+        List<String> validStatuses = Arrays.asList("ADDED", "REGISTERED", "SUGGESTED", "REMOVED");
         if (!validStatuses.contains(requestDto.getStatus())) {
             throw new InvalidStatusException("유효하지 않은 status 값입니다.");
         }

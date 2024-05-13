@@ -34,7 +34,7 @@ import org.example.domain.trashcan.dto.response.ReportListResponse;
 import org.example.domain.trashcan.dto.response.ReportResponse;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsPageResponse;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsResponse;
-import org.example.domain.trashcan.dto.response.TrashcanDetailsResponseWithReportCount;
+import org.example.domain.trashcan.dto.response.TrashcanListResponse;
 import org.example.domain.trashcan.dto.response.TrashcanLocationResponse;
 import org.example.domain.trashcan.dto.response.TrashcanMessageResponse;
 import org.example.domain.trashcan.exception.ImageException;
@@ -337,7 +337,7 @@ public class TrashcanService{
         // 상태 업데이트
         long registrationTotalCount = registrationRepository.countByTrashcan(trashcan);
         if (registrationTotalCount >= 5) {
-            trashcan.setStatus("added");
+            trashcan.setStatus("ADDED");
             trashcanRepository.save(trashcan);
         }
     }
@@ -533,7 +533,7 @@ public class TrashcanService{
             throw new IllegalArgumentException("유효하지 않은 status 값입니다.");
         }
 
-        List<TrashcanDetailsResponseWithReportCount> responses = trashcans.getContent().stream().map(trashcan -> {
+        List<TrashcanListResponse> responses = trashcans.getContent().stream().map(trashcan -> {
             Integer registrationCount = getRegistrationCountForTrashcan(trashcan.getId());
             Integer suggestionCount = getSuggestionCountForTrashcan(trashcan.getId());
             Integer reportCount = reportRepository.countByTrashcanId(trashcan.getId());
@@ -544,7 +544,7 @@ public class TrashcanService{
                     .map(Description::getDescription)
                     .collect(Collectors.toList());
 
-            return new TrashcanDetailsResponseWithReportCount(
+            return new TrashcanListResponse(
                     trashcan.getId(),
                     trashcan.getAddress(),
                     trashcan.getAddressDetail(),
