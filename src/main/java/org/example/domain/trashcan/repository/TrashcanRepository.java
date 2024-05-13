@@ -32,23 +32,20 @@ public interface TrashcanRepository extends JpaRepository<Trashcan, Long> {
     @Query(value = "SELECT COUNT(*) FROM trashcan WHERE ST_Equals(location, :location) = true", nativeQuery = true)
     Long existsByLocation(@Param("location") Point location);
 
-    List<Trashcan> findByStatus(String status);
+    Page<Trashcan> findByStatusOrderByViewsDesc(String status, Pageable pageable);
 
-    @Query("SELECT t FROM Trashcan t LEFT JOIN Registration r ON t.id = r.trashcan.id " +
-            "WHERE t.status = :status " +
-            "GROUP BY t.id " +
-            "ORDER BY COUNT(r) DESC")
-    Page<Trashcan> findByStatusSortedByRegistrationCount(@Param("status") String status, Pageable pageable);
-    @Query("SELECT t FROM Trashcan t LEFT JOIN Suggestion s ON t.id = s.trashcan.id " +
-            "WHERE t.status = :status " +
-            "GROUP BY t.id " +
-            "ORDER BY COUNT(s) DESC")
-    Page<Trashcan> findByStatusSortedBySuggestionCount(@Param("status") String status, Pageable pageable);
+    Page<Trashcan> findByStatusOrderByViewsAsc(String status, Pageable pageable);
+
     @Query("SELECT t FROM Trashcan t LEFT JOIN Report r ON t.id = r.trashcan.id " +
             "WHERE t.status = :status " +
             "GROUP BY t.id " +
             "ORDER BY COUNT(r) DESC")
-    Page<Trashcan> findByStatusSortedByReportCount(@Param("status") String status, Pageable pageable);
+    Page<Trashcan> findByStatusOrderByReportCountDesc(@Param("status") String status, Pageable pageable);
 
+    @Query("SELECT t FROM Trashcan t LEFT JOIN Report r ON t.id = r.trashcan.id " +
+            "WHERE t.status = :status " +
+            "GROUP BY t.id " +
+            "ORDER BY COUNT(r) ASC")
+    Page<Trashcan> findByStatusOrderByReportCountAsc(@Param("status") String status, Pageable pageable);
 
 }

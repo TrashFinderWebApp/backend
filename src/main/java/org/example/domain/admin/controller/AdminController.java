@@ -175,7 +175,7 @@ public class AdminController {
     @GetMapping("/trashcans")
     @Operation(summary = "쓰레기통 리스트 정렬해서 조회",
             description = "상태와 정렬 조건을 받아서 쓰레기통 리스트 조회, 상태는 (ADDED, REGISTERED, SUGGESTED, REMOVED)"
-                    + "정렬조건은 (REGISTRATION, SUGGESTION, REPORT) 내림차순, 페이지 기본 사이즈 20.  이 작업은 관리자만 수행할 수 있습니다.")
+                    + "sort는 (ASC, DESC)으로 REMOVED를 제외하고 조회수를 기준으로 함, REMOVED는 신고 수가 기준, 페이지 기본 사이즈 20.  이 작업은 관리자만 수행할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "쓰레기통 리스트 조회 성공",
                     content = @Content(

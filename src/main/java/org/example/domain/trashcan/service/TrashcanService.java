@@ -512,18 +512,25 @@ public class TrashcanService{
 
     public TrashcanDetailsPageResponse getTrashcanDetailsByStatus(String status, Pageable pageable, String sort) {
         Page<Trashcan> trashcans;
-        switch (sort) {
-            case "REGISTRATION":
-                trashcans = trashcanRepository.findByStatusSortedByRegistrationCount(status, pageable);
-                break;
-            case "SUGGESTION":
-                trashcans = trashcanRepository.findByStatusSortedBySuggestionCount(status, pageable);
-                break;
-            case "REPORT":
-                trashcans = trashcanRepository.findByStatusSortedByReportCount(status, pageable);
-                break;
-            default:
+
+        if (status.equals("REMOVED")) {
+            if (sort.equals("DESC")) {
+                trashcans = trashcanRepository.findByStatusOrderByReportCountDesc(status, pageable);
+            } else if (sort.equals("ASC")) {
+                trashcans = trashcanRepository.findByStatusOrderByReportCountAsc(status, pageable);
+            } else {
                 throw new IllegalArgumentException("잘못된 정렬 요청입니다.");
+            }
+        } else if (status.equals("ADDED") || status.equals("REGISTERED") || status.equals("SUGGESTED")) {
+            if (sort.equals("DESC")) {
+                trashcans = trashcanRepository.findByStatusOrderByViewsDesc(status, pageable);
+            } else if (sort.equals("ASC")) {
+                trashcans = trashcanRepository.findByStatusOrderByViewsAsc(status, pageable);
+            } else {
+                throw new IllegalArgumentException("잘못된 정렬 요청입니다.");
+            }
+        } else {
+            throw new IllegalArgumentException("유효하지 않은 status 값입니다.");
         }
 
         List<TrashcanDetailsResponseWithReportCount> responses = trashcans.getContent().stream().map(trashcan -> {
