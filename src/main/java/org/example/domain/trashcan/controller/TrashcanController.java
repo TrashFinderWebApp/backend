@@ -15,7 +15,7 @@ import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.domain.trashcan.dto.request.TrashcanLocationRequest;
-import org.example.domain.trashcan.dto.response.PersolnalTrashcansPageResponse;
+import org.example.domain.trashcan.dto.response.TrashcansPageResponse;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsResponse;
 import org.example.domain.trashcan.dto.response.TrashcanLocationResponse;
 import org.example.domain.trashcan.dto.response.TrashcanMessageResponse;
@@ -204,14 +204,12 @@ public class TrashcanController {
 
     @GetMapping("/members/{id}")
     @Operation(summary = "특정 멤버가 등록, 위치 제안한 쓰레기통 정보 가져오기",
-            description = "특정 멤버가 등록, 위치 제안한 쓰레기통 정보 가져오기, 타입은 (REGISTRATION, SUGGESTION). 이 작업은 인증된 사용자만 수행할 수 있습니다.")
+            description = "특정 멤버가 등록, 위치 제안한 쓰레기통 정보 가져오기, 타입(REGISTRATION, SUGGESTION)은 멤버가 등록하거나 위치 제안을 했던 쓰레기통들을 가져오는 것,"
+                    + " status와 다름. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "정보 가져오기 성공",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = PersolnalTrashcansPageResponse.class))
-                    )
-            ),
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TrashcansPageResponse.class))),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터(회원 id)",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessage.class))),
@@ -224,22 +222,20 @@ public class TrashcanController {
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        PersolnalTrashcansPageResponse trashcanDetails = trashcanService.getTrashcanDetailsByMemberId(id, type, pageable);
-        if (trashcanDetails.getPersonalTrashcansResponses().isEmpty()) {
+        TrashcansPageResponse trashcansPageResponse = trashcanService.getTrashcanDetailsByMemberId(id, type, pageable);
+        if (trashcansPageResponse.getTrashcansResponses().isEmpty()) {
             throw new TrashcanNotFoundException("등록하거나 위치 제안한 쓰레기통이 없습니다.");
         }
-        return ResponseEntity.ok().body(trashcanDetails);
+        return ResponseEntity.ok().body(trashcansPageResponse);
     }
     @GetMapping("/members/me")
     @Operation(summary = "본인이 등록, 위치 제안한 쓰레기통 정보 가져오기",
-            description = "본인이 등록, 위치 제안한 쓰레기통 정보 가져오기. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
+            description = "본인이 등록, 위치 제안한 쓰레기통 정보 가져오기, 타입(REGISTRATION, SUGGESTION)은 멤버가 등록하거나 위치 제안을 했던 쓰레기통들을 가져오는 것,"
+                    + " status와 다름. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "정보 가져오기 성공",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = PersolnalTrashcansPageResponse.class))
-                    )
-            ),
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TrashcansPageResponse.class))),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터(회원 id)",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessage.class))),
@@ -256,11 +252,11 @@ public class TrashcanController {
         Long memberId = Long.parseLong(claims.getSubject());
 
         Pageable pageable = PageRequest.of(page, size);
-        PersolnalTrashcansPageResponse trashcanDetails = trashcanService.getTrashcanDetailsByMemberId(memberId, type, pageable);
-        if (trashcanDetails.getPersonalTrashcansResponses().isEmpty()) {
+        TrashcansPageResponse trashcansPageResponse = trashcanService.getTrashcanDetailsByMemberId(memberId, type, pageable);
+        if (trashcansPageResponse.getTrashcansResponses().isEmpty()) {
             throw new TrashcanNotFoundException("등록하거나 위치 제안한 쓰레기통이 없습니다.");
         }
-        return ResponseEntity.ok().body(trashcanDetails);
+        return ResponseEntity.ok().body(trashcansPageResponse);
 
     }
 

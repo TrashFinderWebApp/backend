@@ -28,11 +28,11 @@ import org.example.domain.trashcan.domain.Report;
 import org.example.domain.trashcan.domain.Suggestion;
 import org.example.domain.trashcan.domain.Trashcan;
 import org.example.domain.trashcan.dto.request.TrashcanLocationRequest;
-import org.example.domain.trashcan.dto.response.PersolnalTrashcansPageResponse;
-import org.example.domain.trashcan.dto.response.PersonalTrashcansResponse;
-import org.example.domain.trashcan.dto.response.ReportListResponse;
+import org.example.domain.trashcan.dto.response.TrashcansPageResponse;
+import org.example.domain.trashcan.dto.response.TrashcansResponse;
+import org.example.domain.trashcan.dto.response.ReportPageResponse;
 import org.example.domain.trashcan.dto.response.ReportResponse;
-import org.example.domain.trashcan.dto.response.TrashcanDetailsPageResponse;
+import org.example.domain.trashcan.dto.response.TrashcanListPageResponse;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsResponse;
 import org.example.domain.trashcan.dto.response.TrashcanListResponse;
 import org.example.domain.trashcan.dto.response.TrashcanLocationResponse;
@@ -462,14 +462,14 @@ public class TrashcanService{
     }
 
 
-    public PersolnalTrashcansPageResponse getTrashcanDetailsByMemberId(Long memberId, String type, Pageable pageable) {
+    public TrashcansPageResponse getTrashcanDetailsByMemberId(Long memberId, String status, Pageable pageable) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(() -> new NoSuchElementException("해당 ID의 회원을 찾을 수 없습니다."));
 
-        List<PersonalTrashcansResponse> responses = new ArrayList<>();
-        PersolnalTrashcansPageResponse persolnalTrashcansPageResponse;
+        List<TrashcansResponse> responses = new ArrayList<>();
+        TrashcansPageResponse trashcansPageResponse;
 
-        if (type.equals("REGISTRATION")) {
+        if (status.equals("REGISTRATION")) {
             Page<Registration> registrations = registrationRepository.findByMemberId(memberId, pageable);
             for (Registration registration : registrations) {
                 Trashcan trashcan = registration.getTrashcan();
@@ -477,12 +477,12 @@ public class TrashcanService{
                 List<String> descriptions = getDescriptionsByTrashcanId(trashcan.getId()).stream().map(Description::getDescription).collect(Collectors.toList());
                 Integer count = getRegistrationCountForTrashcan(trashcan.getId());
 
-                PersonalTrashcansResponse response = new PersonalTrashcansResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), registration.getCreatedAt(), count);
+                TrashcansResponse response = new TrashcansResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), registration.getCreatedAt(), count);
                 responses.add(response);
             }
-            persolnalTrashcansPageResponse = new PersolnalTrashcansPageResponse(registrations.getTotalPages(), responses);
+            trashcansPageResponse = new TrashcansPageResponse(registrations.getTotalPages(), responses);
 
-        } else if (type.equals("SUGGESTION")) {
+        } else if (status.equals("SUGGESTION")) {
             Page<Suggestion> suggestions = suggestionRepository.findByMemberId(memberId, pageable);
             for (Suggestion suggestion : suggestions) {
                 Trashcan trashcan = suggestion.getTrashcan();
@@ -490,17 +490,17 @@ public class TrashcanService{
                 List<String> descriptions = getDescriptionsByTrashcanId(trashcan.getId()).stream().map(Description::getDescription).collect(Collectors.toList());
                 Integer count = getSuggestionCountForTrashcan(trashcan.getId());
 
-                PersonalTrashcansResponse response = new PersonalTrashcansResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), suggestion.getCreatedAt(), count);
+                TrashcansResponse response = new TrashcansResponse(trashcan.getLocation().getY(), trashcan.getLocation().getX(), trashcan.getId(), trashcan.getAddress(), trashcan.getAddressDetail(), images, descriptions, trashcan.getViews(), trashcan.getStatus(), suggestion.getCreatedAt(), count);
                 responses.add(response);
             }
-            persolnalTrashcansPageResponse = new PersolnalTrashcansPageResponse(suggestions.getTotalPages(), responses);
+            trashcansPageResponse = new TrashcansPageResponse(suggestions.getTotalPages(), responses);
 
         } else {
             throw new IllegalArgumentException("잘못된 타입입니다.");
         }
 
 
-        return persolnalTrashcansPageResponse;
+        return trashcansPageResponse;
     }
 
     public void updateTrashcanStatus(Long id, String status){
@@ -510,7 +510,7 @@ public class TrashcanService{
         trashcanRepository.save(trashcan);
     }
 
-    public TrashcanDetailsPageResponse getTrashcanDetailsByStatus(String status, Pageable pageable, String sort) {
+    public TrashcanListPageResponse getTrashcanDetailsByStatus(String status, Pageable pageable, String sort) {
         Page<Trashcan> trashcans;
 
         if (status.equals("REMOVED")) {
@@ -557,7 +557,7 @@ public class TrashcanService{
             );
         }).collect(Collectors.toList());
 
-        TrashcanDetailsPageResponse trashcanDetailsPageResponse = new TrashcanDetailsPageResponse(trashcans.getTotalPages(), responses);
+        TrashcanListPageResponse trashcanDetailsPageResponse = new TrashcanListPageResponse(trashcans.getTotalPages(), responses);
 
         return trashcanDetailsPageResponse;
     }
@@ -605,17 +605,19 @@ public class TrashcanService{
         }
     }
 
-    public List<ReportResponse> getReportsByTrashcanId(Long trashcanId) {
-        List<Report> reports = reportRepository.findByTrashcanId(trashcanId);
+    public ReportPageResponse getReportsByTrashcanId(Long trashcanId, Pageable pageable) {
+        Page<Report> reports = reportRepository.findByTrashcanId(trashcanId, pageable);
         if (reports.isEmpty()) {
             throw new IllegalArgumentException("신고 요청이 없습니다.");
         }
+        List<ReportResponse> reportResponses = reports.stream()
+                .map(ReportResponse::new)
+                .collect(Collectors.toList());
 
-        //Report -> ReportResponse
-        return reports.stream().map(ReportResponse::new).collect(Collectors.toList());
+        return new ReportPageResponse(reports.getTotalPages(), reportResponses);
     }
 
-    public ReportListResponse getReports(Pageable pageable) {
+    public ReportPageResponse getReports(Pageable pageable) {
         Page<Report> reports = reportRepository.findAllByOrderByCreatedAtDesc(pageable);
         if (reports.isEmpty()) {
             throw new NotFoundException("신고 내용이 없습니다.");
@@ -625,7 +627,7 @@ public class TrashcanService{
                 .map(ReportResponse::new)
                 .collect(Collectors.toList());
 
-        return new ReportListResponse(reports.getTotalPages(), reportResponses);
+        return new ReportPageResponse(reports.getTotalPages(), reportResponses);
     }
 
     public void deleteReportById(Long id) {

@@ -6,8 +6,8 @@ import lombok.Getter;
 
 @AllArgsConstructor
 @Getter
-public class TrashcanDetailsPageResponse {
+public class TrashcanListPageResponse {
     private Integer totalPages;
-    private List<TrashcanListResponse> trashcanDetailsResponseWithReportCounts;
+    private List<TrashcanListResponse> trashcanListResponses;
 
 }
