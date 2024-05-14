@@ -18,7 +18,7 @@ public interface ReportRepository  extends JpaRepository<Report, Long> {
 
     Integer countByTrashcanId(Long trashcanId);
 
-    List<Report> findByTrashcanId(Long trashcanId);
+    Page<Report> findByTrashcanId(Long trashcanId, Pageable pageable);
 
     Page<Report> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }
