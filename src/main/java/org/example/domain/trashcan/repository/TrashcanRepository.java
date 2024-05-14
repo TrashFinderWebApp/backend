@@ -2,6 +2,8 @@ package org.example.domain.trashcan.repository;
 
 import java.util.List;
 import org.example.domain.trashcan.domain.Trashcan;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -30,5 +32,20 @@ public interface TrashcanRepository extends JpaRepository<Trashcan, Long> {
     @Query(value = "SELECT COUNT(*) FROM trashcan WHERE ST_Equals(location, :location) = true", nativeQuery = true)
     Long existsByLocation(@Param("location") Point location);
 
+    Page<Trashcan> findByStatusOrderByViewsDesc(String status, Pageable pageable);
+
+    Page<Trashcan> findByStatusOrderByViewsAsc(String status, Pageable pageable);
+
+    @Query("SELECT t FROM Trashcan t LEFT JOIN Report r ON t.id = r.trashcan.id " +
+            "WHERE t.status = :status " +
+            "GROUP BY t.id " +
+            "ORDER BY COUNT(r) DESC")
+    Page<Trashcan> findByStatusOrderByReportCountDesc(@Param("status") String status, Pageable pageable);
+
+    @Query("SELECT t FROM Trashcan t LEFT JOIN Report r ON t.id = r.trashcan.id " +
+            "WHERE t.status = :status " +
+            "GROUP BY t.id " +
+            "ORDER BY COUNT(r) ASC")
+    Page<Trashcan> findByStatusOrderByReportCountAsc(@Param("status") String status, Pageable pageable);
 
 }
