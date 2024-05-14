@@ -2,6 +2,7 @@ package org.example.domain.admin.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -38,7 +39,7 @@ public class AdminController {
             @ApiResponse(responseCode = "500", description = "기타 서버 에러",
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
     })
-    @Parameter(name = "access token")
+    @Parameter(name = "access token", in = ParameterIn.HEADER)
     public ResponseEntity<?> getMembersList(@RequestParam Integer page, @RequestParam(required = false) String memberName) {
         try {
             MemberListResponse memberListResponse;
