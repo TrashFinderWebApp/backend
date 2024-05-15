@@ -23,8 +23,8 @@ import org.hibernate.annotations.CreationTimestamp;
 @Getter
 @Setter
 @Entity
-@Table(name = "suggestion")
-public class Suggestion {
+@Table(name = "report")
+public class Report {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -42,4 +42,6 @@ public class Suggestion {
     @JoinColumn(name = "trashcan_id", nullable = false)
     private Trashcan trashcan;
 
+    @Column(nullable = false)
+    private String description;
 }
