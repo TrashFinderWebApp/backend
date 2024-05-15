@@ -11,10 +11,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.domain.trashcan.dto.request.TrashcanLocationRequest;
+import org.example.domain.trashcan.dto.request.TrashcanReportRequest;
 import org.example.domain.trashcan.dto.response.TrashcansPageResponse;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsResponse;
 import org.example.domain.trashcan.dto.response.TrashcanLocationResponse;
@@ -277,9 +279,9 @@ public class TrashcanController {
     public ResponseEntity<?> reportTrashcan(
             @PathVariable("id") Long trashcanId,
             HttpServletRequest request,
-            @RequestParam(value = "description", required = true) String description) {
+            @RequestBody @Valid TrashcanReportRequest trashcanReportRequest) {
         String token = jwtProvider.resolveAccessToken(request);
-        trashcanService.reportTrashcan(trashcanId, description, token);
+        trashcanService.reportTrashcan(trashcanId, trashcanReportRequest.getDescription(), token);
         return ResponseEntity.ok().body(new TrashcanMessageResponse("신고가 성공적으로 등록되었습니다."));
     }
 
