@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.domain.member.dto.EmailVerificationResult;
 import org.example.domain.member.dto.request.UserSignInRequest;
 import org.example.domain.member.dto.request.UserSignUpRequest;
@@ -20,6 +21,7 @@ import org.example.domain.member.dto.response.TokenInfo;
 import org.example.domain.member.service.MemberService;
 import org.example.global.advice.ErrorMessage;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/members")
+@Slf4j
 public class MemberController {
     private final MemberService memberService;
 
@@ -112,13 +115,15 @@ public class MemberController {
         try {
             TokenInfo tokenInfo = memberService.userSignIn(request);
 
-            Cookie cookie = new Cookie("RefreshToken", tokenInfo.getRefreshToken());
-            cookie.setMaxAge(14 * 24 * 60 * 60);//expires in 2 weeks
+            ResponseCookie cookie = ResponseCookie.from("RefreshToken")
+                    .path("/api/auth/reissue")
+                    .maxAge(14 * 24 * 60 * 60)
+                    .httpOnly(true)
+                    .secure(true)
+                    .sameSite("None")
+                    .build();
 
-            cookie.setSecure(true);
-            cookie.setHttpOnly(true);
-
-            response.addCookie(cookie);
+            response.addHeader("Set-Cookie", cookie.toString());
 
             return new ResponseEntity<>(new AccessTokenResponse(
                     tokenInfo.getAccessToken(), tokenInfo.getExpiredTime(), tokenInfo.getMemberRoleType()), HttpStatus.OK);

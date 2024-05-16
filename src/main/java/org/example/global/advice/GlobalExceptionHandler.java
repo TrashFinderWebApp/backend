@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 import org.example.domain.trashcan.exception.TrashcanNotFoundException;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -25,7 +26,8 @@ public class GlobalExceptionHandler {
         List<FieldError> fieldErrors = result.getFieldErrors();
 
         String message = fieldErrors.stream()
-                .map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
+                //.map(fieldError -> fieldError.getField() + ": " + fieldError.getDefaultMessage())
+                .map(DefaultMessageSourceResolvable::getDefaultMessage)
                 .collect(Collectors.joining(", "));
 
         ErrorMessage errorMessage = new ErrorMessage(message);
