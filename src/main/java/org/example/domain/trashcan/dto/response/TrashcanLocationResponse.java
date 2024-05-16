@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @AllArgsConstructor
 public class TrashcanLocationResponse {
-    private Long id;
+    private Long trashcanId;
     private Double latitude;
     private Double longitude;
     private String addressDetail;
