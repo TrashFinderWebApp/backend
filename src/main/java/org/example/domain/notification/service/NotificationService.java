@@ -11,6 +11,8 @@ import org.example.domain.notification.domain.Notification;
 import org.example.domain.notification.domain.NotificationType;
 import org.example.domain.notification.repository.NotificationRepository;
 import org.example.global.security.jwt.JwtProvider;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,37 +31,21 @@ public class NotificationService {
                 ));
     }
 
-    public List<NotificationListResponseAll> getAllNotificationList() {
-        List<Notification> responseData = notificationRepository.findAllByOrderByCreatedAtDesc();
-        List<NotificationListResponseAll> responseAllList = convertToResponseAllList(responseData);
-
-        if (responseAllList.isEmpty()) {
-            throw new IllegalArgumentException("resources not found.");
-        }
-        return responseAllList;
+    public NotificationListResponseAll getAllNotificationList(Integer page) {
+        PageRequest pageRequest = PageRequest.of(page, 20);
+        Page<Notification> responseData = notificationRepository.findAllByOrderByCreatedAtDesc(pageRequest);
+        return convertToResponseAllList(responseData);
     }
 
-    public List<NotificationListResponseAll> getStateNotificationList(NotificationType type) {
-        List<Notification> responseData = notificationRepository.findByStateOrderByCreatedAtDesc(type.name());
-        List<NotificationListResponseAll> responseAllList = convertToResponseAllList(responseData);
-
-        if (responseAllList.isEmpty()) {
-            throw new IllegalArgumentException("resources not found.");
-        }
-        return responseAllList;
+    public NotificationListResponseAll getStateNotificationList(String notificationType, Integer page) {
+        PageRequest pageRequest = PageRequest.of(page, 20);
+        Page<Notification> responseData = notificationRepository.findByStateOrderByCreatedAtDesc(notificationType, pageRequest);
+        return convertToResponseAllList(responseData);
     }
 
-    private List<NotificationListResponseAll> convertToResponseAllList(List<Notification> responseData) {
-        List<NotificationListResponseAll> allList = new ArrayList<>();
 
-        for (Notification notification : responseData) {
-            NotificationListResponseAll oneNotification = new NotificationListResponseAll(notification.getId(),
-                    notification.getTitle(), notification.getDescription(), notification.getCreatedAt(),
-                    NotificationType.valueOf(notification.getState()).getType());
-            allList.add(oneNotification);
-        }
-
-        return allList;
+    private NotificationListResponseAll convertToResponseAllList(Page<Notification> responseData) {
+        return new NotificationListResponseAll(responseData);
     }
 
     @Transactional

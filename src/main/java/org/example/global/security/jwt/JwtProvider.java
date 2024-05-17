@@ -9,6 +9,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import java.security.Key;
 import java.util.Arrays;
@@ -75,7 +76,7 @@ public class JwtProvider {
 
         refreshTokenService.saveTokenInfo(userPk, refreshToken);
 
-        return new TokenInfo(accessToken, refreshToken, jwtExpiredUnixTime);
+        return new TokenInfo(accessToken, refreshToken, jwtExpiredUnixTime, roles);
     }
 
     //JWT 토큰을 복호화하여 토큰에 들어있는 정보를 꺼내는 메서드
@@ -123,9 +124,23 @@ public class JwtProvider {
     }
 
     public String resolveRefreshToken(HttpServletRequest request) {
-        String bearerToken = request.getHeader(REFRESH_HEADER);
+        String bearerToken = getCookie(request);
         if (StringUtils.hasText(bearerToken)) {
             return bearerToken;
+        }
+        return null;
+    }
+
+    private String getCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie c : cookies) {
+                String name = c.getName();
+                String value = c.getValue();
+                if (name.equals(REFRESH_HEADER)) {
+                    return value;
+                }
+            }
         }
         return null;
     }

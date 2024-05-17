@@ -17,6 +17,7 @@ import org.example.domain.member.service.Oauth2Service;
 import org.example.domain.member.type.SocialType;
 import org.example.global.advice.ErrorMessage;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -50,17 +51,18 @@ public class Oauth2Controller {
         try {
             TokenInfo tokenInfo = oauth2Service.socialLogin(socialType, socialAccessToken);
 
-            Cookie cookie = new Cookie("refreshToken", tokenInfo.getRefreshToken());
-            cookie.setMaxAge(14*24*60*60);//expires in 2 weeks
-            cookie.setPath("/");
+            ResponseCookie cookie = ResponseCookie.from("RefreshToken")
+                    .path("/api/auth/reissue")
+                    .maxAge(14 * 24 * 60 * 60)
+                    .httpOnly(true)
+                    .secure(true)
+                    .sameSite("None")
+                    .build();
 
-            cookie.setSecure(true);//http통신에서는 전달x, https에서만 전달
-            cookie.setHttpOnly(true);//XSS 예방
-
-            response.addCookie(cookie);
+            response.addHeader("Set-Cookie", cookie.toString());
 
             return new ResponseEntity<>(new AccessTokenResponse(
-                    tokenInfo.getAccessToken(), tokenInfo.getExpiredTime()), HttpStatus.OK);
+                    tokenInfo.getAccessToken(), tokenInfo.getExpiredTime(), tokenInfo.getMemberRoleType()), HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(new ErrorMessage(e.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
         }

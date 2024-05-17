@@ -19,6 +19,7 @@ import org.example.domain.member.service.TokenService;
 import org.example.global.advice.ErrorMessage;
 import org.example.global.security.jwt.JwtProvider;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -53,16 +54,18 @@ public class TokenController {
         try {
             TokenInfo tokenInfo = tokenService.reIssueToken(encryptedRefreshToken);
 
-            Cookie cookie = new Cookie("refreshToken", tokenInfo.getRefreshToken());
-            cookie.setMaxAge(14*24*60*60);//expires in 2 weeks
+            ResponseCookie cookie = ResponseCookie.from("RefreshToken")
+                    .path("/api/auth/reissue")
+                    .maxAge(14 * 24 * 60 * 60)
+                    .httpOnly(true)
+                    .secure(true)
+                    .sameSite("None")
+                    .build();
 
-            cookie.setSecure(true);
-            cookie.setHttpOnly(true);
-
-            response.addCookie(cookie);
+            response.addHeader("Set-Cookie", cookie.toString());
 
             return new ResponseEntity<>(new AccessTokenResponse(
-                    tokenInfo.getAccessToken(), tokenInfo.getExpiredTime()), HttpStatus.OK);
+                    tokenInfo.getAccessToken(), tokenInfo.getExpiredTime(), tokenInfo.getMemberRoleType()), HttpStatus.OK);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(new ErrorMessage(e.getMessage()),HttpStatus.UNAUTHORIZED);
         }

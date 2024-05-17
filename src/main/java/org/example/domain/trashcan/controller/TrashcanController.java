@@ -11,11 +11,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import java.util.Arrays;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.domain.trashcan.dto.request.TrashcanLocationRequest;
-import org.example.domain.trashcan.dto.response.PersonalTrashcansResponse;
+import org.example.domain.trashcan.dto.request.TrashcanReportRequest;
+import org.example.domain.trashcan.dto.response.TrashcansPageResponse;
 import org.example.domain.trashcan.dto.response.TrashcanDetailsResponse;
 import org.example.domain.trashcan.dto.response.TrashcanLocationResponse;
 import org.example.domain.trashcan.dto.response.TrashcanMessageResponse;
@@ -24,6 +26,8 @@ import org.example.domain.trashcan.exception.TrashcanNotFoundException;
 import org.example.domain.trashcan.service.TrashcanService;
 import org.example.global.advice.ErrorMessage;
 import org.example.global.security.jwt.JwtProvider;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -38,11 +42,13 @@ import org.springframework.web.multipart.MultipartFile;
 @Tag(name = "trashcan", description = "쓰레기통 api")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/trashcan")
+@RequestMapping("/api/trashcans")
 public class TrashcanController {
 
     private final TrashcanService trashcanService;
     private final JwtProvider jwtProvider;
+
+
     @GetMapping("/locations")
     @Operation(summary = "쓰레기통 찾기", description = "반경 내 쓰레기통 찾기",
             parameters = {
@@ -64,13 +70,15 @@ public class TrashcanController {
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessage.class)))
     })
-    public ResponseEntity<?> getTrashcanLocations(@ModelAttribute TrashcanLocationRequest requestDto) {
-        List<String> validStatuses = Arrays.asList("added", "registered", "suggested", "removed");
+    public ResponseEntity<?> getTrashcanLocations(
+            @ModelAttribute TrashcanLocationRequest requestDto) {
+        List<String> validStatuses = Arrays.asList("ADDED", "REGISTERED", "SUGGESTED", "REMOVED");
         if (!validStatuses.contains(requestDto.getStatus())) {
             throw new InvalidStatusException("유효하지 않은 status 값입니다.");
         }
 
-        List<TrashcanLocationResponse> responseList = trashcanService.findTrashcanLocations(requestDto);
+        List<TrashcanLocationResponse> responseList = trashcanService.findTrashcanLocations(
+                requestDto);
 
         return ResponseEntity.ok().body(responseList);
     }
@@ -109,13 +117,14 @@ public class TrashcanController {
             HttpServletRequest request,
             @RequestParam("latitude") double latitude,
             @RequestParam("longitude") double longitude,
-            @RequestParam(value = "address_detail", required = false) String addressDetail,
+            @RequestParam(value = "addressDetail", required = false) String addressDetail,
             @RequestParam(value = "address", required = false) String address,
             @RequestParam(value = "description", required = false) String description,
-            @RequestParam(value = "image_object", required = false) List<MultipartFile> imageObjects) {
+            @RequestParam(value = "imageObject", required = false) List<MultipartFile> imageObjects) {
 
         String token = jwtProvider.resolveAccessToken(request);
-        TrashcanMessageResponse response = trashcanService.registerTrashcan(latitude, longitude, addressDetail, address, description, imageObjects, token);
+        TrashcanMessageResponse response = trashcanService.registerTrashcan(latitude, longitude,
+                addressDetail, address, description, imageObjects, token);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -136,7 +145,7 @@ public class TrashcanController {
     public ResponseEntity<?> registerTrashcanId(
             @PathVariable("id") Long trashcanId,
             HttpServletRequest request,
-            @RequestParam(value = "image_object", required = false) List<MultipartFile> imageObjects,
+            @RequestParam(value = "imageObject", required = false) List<MultipartFile> imageObjects,
             @RequestParam(value = "description", required = false) String description) {
         String token = jwtProvider.resolveAccessToken(request);
         trashcanService.registerTrashcanId(trashcanId, imageObjects, description, token);
@@ -161,12 +170,13 @@ public class TrashcanController {
             HttpServletRequest request,
             @RequestParam("latitude") double latitude,
             @RequestParam("longitude") double longitude,
-            @RequestParam(value = "address_detail", required = false) String addressDetail,
+            @RequestParam(value = "addressDetail", required = false) String addressDetail,
             @RequestParam(value = "address", required = false) String address,
             @RequestParam(value = "description", required = false) String description,
-            @RequestParam(value = "image_object", required = false) List<MultipartFile> imageObjects) {
+            @RequestParam(value = "imageObject", required = false) List<MultipartFile> imageObjects) {
         String token = jwtProvider.resolveAccessToken(request);
-        TrashcanMessageResponse response = trashcanService.suggestTrashcan(latitude, longitude, addressDetail, address, description, imageObjects, token);
+        TrashcanMessageResponse response = trashcanService.suggestTrashcan(latitude, longitude,
+                addressDetail, address, description, imageObjects, token);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
@@ -187,23 +197,21 @@ public class TrashcanController {
     public ResponseEntity<?> suggestTrashcanId(
             @PathVariable("id") Long trashcanId,
             HttpServletRequest request,
-            @RequestParam(value = "image_object", required = false) List<MultipartFile> imageObjects,
+            @RequestParam(value = "imageObject", required = false) List<MultipartFile> imageObjects,
             @RequestParam(value = "description", required = false) String description) {
         String token = jwtProvider.resolveAccessToken(request);
         trashcanService.suggestTrashcanId(trashcanId, imageObjects, description, token);
         return ResponseEntity.ok().body(new TrashcanMessageResponse("정보 추가 성공"));
     }
 
-    @GetMapping("/member/{memberId}")
+    @GetMapping("/members/{id}")
     @Operation(summary = "특정 멤버가 등록, 위치 제안한 쓰레기통 정보 가져오기",
-            description = "특정 멤버가 등록, 위치 제안한 쓰레기통 정보 가져오기. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
+            description = "특정 멤버가 등록, 위치 제안한 쓰레기통 정보 가져오기, 타입(REGISTRATION, SUGGESTION)은 멤버가 등록하거나 위치 제안을 했던 쓰레기통들을 가져오는 것,"
+                    + " status와 다름. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "정보 가져오기 성공",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = PersonalTrashcansResponse.class))
-                    )
-            ),
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TrashcansPageResponse.class))),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터(회원 id)",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessage.class))),
@@ -212,24 +220,24 @@ public class TrashcanController {
                             schema = @Schema(implementation = ErrorMessage.class))),
     })
     @Parameter(name = "access token", in = ParameterIn.HEADER)
-    public ResponseEntity<List<PersonalTrashcansResponse>> getTrashcansDetailsByMemberId(@PathVariable Long memberId) {
-        List<PersonalTrashcansResponse> trashcanDetails = trashcanService.getTrashcanDetailsByMemberId(memberId);
-        if (trashcanDetails.isEmpty()) {
+    public ResponseEntity<?> getTrashcansDetailsByMemberId(@PathVariable Long id, @RequestParam String type,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "20") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        TrashcansPageResponse trashcansPageResponse = trashcanService.getTrashcanDetailsByMemberId(id, type, pageable);
+        if (trashcansPageResponse.getTrashcansResponses().isEmpty()) {
             throw new TrashcanNotFoundException("등록하거나 위치 제안한 쓰레기통이 없습니다.");
         }
-        return ResponseEntity.ok().body(trashcanDetails);
+        return ResponseEntity.ok().body(trashcansPageResponse);
     }
-
-    @GetMapping("/member/me")
+    @GetMapping("/members/me")
     @Operation(summary = "본인이 등록, 위치 제안한 쓰레기통 정보 가져오기",
-            description = "본인이 등록, 위치 제안한 쓰레기통 정보 가져오기. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
+            description = "본인이 등록, 위치 제안한 쓰레기통 정보 가져오기, 타입(REGISTRATION, SUGGESTION)은 멤버가 등록하거나 위치 제안을 했던 쓰레기통들을 가져오는 것,"
+                    + " status와 다름. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "정보 가져오기 성공",
-                    content = @Content(
-                            mediaType = "application/json",
-                            array = @ArraySchema(schema = @Schema(implementation = PersonalTrashcansResponse.class))
-                    )
-            ),
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TrashcansPageResponse.class))),
             @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터(회원 id)",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorMessage.class))),
@@ -238,17 +246,43 @@ public class TrashcanController {
                             schema = @Schema(implementation = ErrorMessage.class))),
     })
     @Parameter(name = "access token", in = ParameterIn.HEADER)
-    public ResponseEntity<List<PersonalTrashcansResponse>> getTrashcansDetailsByMe(HttpServletRequest request){
+    public ResponseEntity<?> getTrashcansDetailsByMe(HttpServletRequest request, @RequestParam String type,
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "20") int size){
         String token = jwtProvider.resolveAccessToken(request);
         Claims claims = jwtProvider.parseClaims(token);
         Long memberId = Long.parseLong(claims.getSubject());
 
-        List<PersonalTrashcansResponse> trashcanDetails = trashcanService.getTrashcanDetailsByMemberId(memberId);
-        if (trashcanDetails.isEmpty()) {
+        Pageable pageable = PageRequest.of(page, size);
+        TrashcansPageResponse trashcansPageResponse = trashcanService.getTrashcanDetailsByMemberId(memberId, type, pageable);
+        if (trashcansPageResponse.getTrashcansResponses().isEmpty()) {
             throw new TrashcanNotFoundException("등록하거나 위치 제안한 쓰레기통이 없습니다.");
         }
-        return ResponseEntity.ok().body(trashcanDetails);
+        return ResponseEntity.ok().body(trashcansPageResponse);
 
+    }
+
+    @PostMapping("/reports/{id}")
+    @Operation(summary = "쓰레기통 신고 추가",
+            description = "쓰레기통에 대한 신고를 추가합니다. 하루에 3번 신고 가능, 중복 신고 불가능, 신고 5회 이상 자동 REMOVED. 이 작업은 인증된 사용자만 수행할 수 있습니다.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "쓰레기통 신고 추가 성공",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = TrashcanMessageResponse.class))),
+            @ApiResponse(responseCode = "400", description = "잘못된 요청 데이터",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class))),
+            @ApiResponse(responseCode = "404", description = "데이터가 없음",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorMessage.class))),
+    })
+    public ResponseEntity<?> reportTrashcan(
+            @PathVariable("id") Long trashcanId,
+            HttpServletRequest request,
+            @RequestBody @Valid TrashcanReportRequest trashcanReportRequest) {
+        String token = jwtProvider.resolveAccessToken(request);
+        trashcanService.reportTrashcan(trashcanId, trashcanReportRequest.getDescription(), token);
+        return ResponseEntity.ok().body(new TrashcanMessageResponse("신고가 성공적으로 등록되었습니다."));
     }
 
 }
