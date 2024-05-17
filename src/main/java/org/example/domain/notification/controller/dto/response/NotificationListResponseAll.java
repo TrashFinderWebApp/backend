@@ -35,5 +35,4 @@ public class NotificationListResponseAll {
             this.notificationInfoList.add(notificationInfo);
         }
     }
-
 }
