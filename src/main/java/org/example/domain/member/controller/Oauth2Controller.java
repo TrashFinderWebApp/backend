@@ -51,7 +51,7 @@ public class Oauth2Controller {
         try {
             TokenInfo tokenInfo = oauth2Service.socialLogin(socialType, socialAccessToken);
 
-            ResponseCookie cookie = ResponseCookie.from("RefreshToken")
+            ResponseCookie cookie = ResponseCookie.from("RefreshToken", tokenInfo.getRefreshToken())
                     .path("/api/auth/reissue")
                     .maxAge(14 * 24 * 60 * 60)
                     .httpOnly(true)
