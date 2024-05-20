@@ -30,7 +30,7 @@ public class TokenService {
         RefreshToken findRefreshToken = refreshTokenService.findById(userPk);
 
         if (refreshToken.equals(findRefreshToken.getRefreshToken())) {
-            return jwtProvider.createToken(userPk, member.getRole().toString());
+            return jwtProvider.createToken(userPk, "ROLE_" + member.getRole().toString());
         }
 
         refreshTokenService.deleteById(userPk);

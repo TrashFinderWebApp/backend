@@ -54,7 +54,7 @@ public class TokenController {
         try {
             TokenInfo tokenInfo = tokenService.reIssueToken(encryptedRefreshToken);
 
-            ResponseCookie cookie = ResponseCookie.from("RefreshToken")
+            ResponseCookie cookie = ResponseCookie.from("RefreshToken", tokenInfo.getRefreshToken())
                     .path("/api/auth/reissue")
                     .maxAge(14 * 24 * 60 * 60)
                     .httpOnly(true)
