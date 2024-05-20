@@ -24,6 +24,7 @@ public class NotificationService {
     private final JwtProvider jwtProvider;
 
     public void createNotification(CreateNotificationRequest notificationRequest) {
+        log.info(notificationRequest.toString());
         notificationRepository.save(
                 new Notification(
                         notificationRequest.getTitle(),
