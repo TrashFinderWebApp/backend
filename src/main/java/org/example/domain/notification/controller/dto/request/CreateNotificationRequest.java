@@ -5,9 +5,11 @@ import jakarta.validation.constraints.NotBlank;
 import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.ToString;
 
 @Getter
 @AllArgsConstructor
+@ToString
 public class CreateNotificationRequest {
 
     @NotBlank(message = "제목을 입력해주세요.")

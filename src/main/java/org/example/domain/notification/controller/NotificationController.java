@@ -37,7 +37,7 @@ public class NotificationController {
     private final JwtProvider jwtProvider;
 
 
-    @PostMapping("/")
+    @PostMapping()
     @Operation(summary = "공지사항 생성", description = "공지사항 생성 API, 관리자만 접근 가능합니다. \t\n "
             + "UPDATED, GENERAL, EVENT 상태값만 허용합니다.")
     @ApiResponses(value = {
@@ -49,7 +49,7 @@ public class NotificationController {
                     content = @Content(schema = @Schema(implementation = ErrorMessage.class))),
     })
     @Parameter(name = "access token")
-    public ResponseEntity<?> createNotification(CreateNotificationRequest notificationRequest) {
+    public ResponseEntity<?> createNotification(@RequestBody CreateNotificationRequest notificationRequest) {
         try {
             notificationService.createNotification(notificationRequest);
             return new ResponseEntity<>(HttpStatus.CREATED);
